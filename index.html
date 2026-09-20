@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EduPay - Tuition Fee Management & UPI Portal</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Fast JSDelivr CDN for Lucide Icons -->
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.1/dist/umd/lucide.min.js"></script>
+  <!-- Chart.js for fee analytics -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Confetti script -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+              900: '#312e81',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    @media print {
+      body * { visibility: hidden; }
+      #printableReceipt, #printableReceipt * { visibility: visible; }
+      #printableReceipt {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        margin: 0;
+        padding: 20px;
+        box-shadow: none;
+      }
+      .no-print { display: none !important; }
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen font-sans antialiased flex flex-col">
+
+  <!-- TOAST CONTAINER -->
+  <div id="toastContainer" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- ==================== AUTH / LOGIN SCREEN ==================== -->
+  <div id="authScreen" class="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-indigo-950 via-slate-900 to-slate-950">
+    <div class="max-w-md w-full bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-100">
+      
+      <!-- Top Banner -->
+      <div class="bg-gradient-to-r from-brand-600 to-indigo-700 p-6 text-white text-center">
+        <div class="w-12 h-12 bg-white/15 backdrop-blur-md rounded-2xl flex items-center justify-center mx-auto mb-3 border border-white/20">
+          <i data-lucide="graduation-cap" class="w-7 h-7 text-white"></i>
+        </div>
+        <h2 class="text-2xl font-bold tracking-tight">EduPay Portal</h2>
+        <p class="text-brand-100 text-xs mt-1">Tuition Fee Management & Direct UPI Gateway</p>
+      </div>
+
+      <!-- Role Selector Tabs -->
+      <div class="flex border-b border-slate-200 bg-slate-50 text-xs sm:text-sm font-medium text-center">
+        <button id="tabAdmin" onclick="switchLoginTab('admin')" type="button" class="flex-1 py-3.5 border-b-2 border-brand-600 text-brand-600 font-bold flex items-center justify-center gap-1.5 transition-colors">
+          <i data-lucide="shield-check" class="w-4 h-4"></i> Admin / Tutor
+        </button>
+        <button id="tabStudent" onclick="switchLoginTab('student')" type="button" class="flex-1 py-3.5 text-slate-500 hover:text-slate-700 flex items-center justify-center gap-1.5 transition-colors">
+          <i data-lucide="user" class="w-4 h-4"></i> Student / Parent
+        </button>
+      </div>
+
+      <div class="p-6">
+        <!-- Error / Status Notice Box -->
+        <div id="loginAlertBox" class="hidden mb-4 p-3 rounded-xl text-xs font-semibold"></div>
+
+        <!-- ================= ADMIN LOGIN FORM ================= -->
+        <div id="adminLoginForm" class="space-y-4">
+          <div>
+            <label class="block text-xs font-semibold uppercase text-slate-500 mb-1">Admin Email</label>
+            <div class="relative">
+              <i data-lucide="mail" class="w-4 h-4 text-slate-400 absolute left-3 top-3"></i>
+              <input type="email" id="adminEmail" value="tutor@apexacademy.com" 
+                class="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none" />
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold uppercase text-slate-500 mb-1">Password</label>
+            <div class="relative">
+              <i data-lucide="lock" class="w-4 h-4 text-slate-400 absolute left-3 top-3"></i>
+              <input type="password" id="adminPassword" value="admin123" 
+                class="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none" />
+            </div>
+            <p class="text-[11px] text-slate-400 mt-1">Default demo password: <span class="font-bold text-slate-600">admin123</span></p>
+          </div>
+
+          <div class="space-y-2 pt-1">
+            <!-- Normal Submit Button -->
+            <button type="button" onclick="executeAdminLogin()" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-semibold py-2.5 rounded-xl shadow-md transition flex items-center justify-center gap-2 text-sm">
+              <span>Log In to Admin Dashboard</span>
+              <i data-lucide="arrow-right" class="w-4 h-4"></i>
+            </button>
+            
+            <!-- Quick 1-Click Login -->
+            <button type="button" onclick="quickAdminLogin()" class="w-full bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold py-2 rounded-xl text-xs transition border border-indigo-200 flex items-center justify-center gap-1.5">
+              <span>⚡ One-Click Admin Demo Login</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- ================= STUDENT LOGIN FORM ================= -->
+        <div id="studentLoginForm" class="space-y-4 hidden">
+          <div>
+            <label class="block text-xs font-semibold uppercase text-slate-500 mb-1">Choose Demo Student Profile</label>
+            <select id="quickStudentSelect" onchange="autoFillStudentPhone(this.value)" class="w-full py-2 px-3 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none bg-white">
+              <!-- Dynamically populated -->
+            </select>
+          </div>
+
+          <div class="text-center text-xs text-slate-400 font-medium">OR Enter Parent Phone</div>
+
+          <div>
+            <label class="block text-xs font-semibold uppercase text-slate-500 mb-1">Parent Mobile Number</label>
+            <div class="relative">
+              <i data-lucide="phone" class="w-4 h-4 text-slate-400 absolute left-3 top-3"></i>
+              <input type="tel" id="studentPhone" value="9876543210" placeholder="10-digit mobile number" 
+                class="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none" />
+            </div>
+          </div>
+
+          <div class="space-y-2 pt-1">
+            <button type="button" onclick="executeStudentLogin()" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-semibold py-2.5 rounded-xl shadow-md transition flex items-center justify-center gap-2 text-sm">
+              <span>Access Student Portal</span>
+              <i data-lucide="arrow-right" class="w-4 h-4"></i>
+            </button>
+            <button type="button" onclick="quickStudentLogin()" class="w-full bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold py-2 rounded-xl text-xs transition border border-emerald-200 flex items-center justify-center gap-1.5">
+              <span>⚡ One-Click Student Demo Login</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Reset Storage Option if stuck -->
+        <div class="mt-6 pt-4 border-t border-slate-100 text-center">
+          <button type="button" onclick="resetAppData()" class="text-[11px] text-slate-400 hover:text-rose-500 transition underline">
+            Reset Demo Data & Clear Cache
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MAIN APPLICATION CONTAINER ==================== -->
+  <div id="mainApp" class="hidden flex-1 flex flex-col">
+    
+    <!-- Top Navigation -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        
+        <!-- Logo -->
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-brand-600 rounded-xl flex items-center justify-center text-white shadow-md shadow-brand-500/20">
+            <i data-lucide="graduation-cap" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h1 class="text-base sm:text-lg font-bold tracking-tight text-slate-900 flex items-center gap-2">
+              <span id="navInstituteName">Apex Academy</span>
+              <span id="roleBadge" class="text-xs px-2 py-0.5 rounded-full font-medium bg-brand-100 text-brand-700">Admin</span>
+            </h1>
+            <p class="text-xs text-slate-500 hidden sm:block">Tuition Fee & Direct UPI System</p>
+          </div>
+        </div>
+
+        <!-- Right Side Nav -->
+        <div class="flex items-center gap-3">
+          <div id="adminVpaIndicator" class="hidden sm:flex items-center gap-2 px-3 py-1 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-full text-xs font-mono font-medium">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            UPI: <span id="navVpaPreview">tutor@okaxis</span>
+          </div>
+
+          <button id="adminSettingsBtn" onclick="openModal('settingsModal')" title="Admin UPI Settings" class="p-2 text-slate-600 hover:text-brand-600 hover:bg-slate-100 rounded-lg transition">
+            <i data-lucide="settings" class="w-5 h-5"></i>
+          </button>
+
+          <button onclick="logout()" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-lg transition">
+            <i data-lucide="log-out" class="w-4 h-4"></i>
+            <span class="hidden sm:inline">Logout</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Sub Navigation for Admin Tabs -->
+    <div id="adminTabNav" class="bg-white border-b border-slate-200">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex space-x-6">
+        <button onclick="switchAdminSection('dashboard')" id="subtab-dashboard" class="py-3 px-1 border-b-2 border-brand-600 text-brand-600 font-semibold text-sm flex items-center gap-2">
+          <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Dashboard
+        </button>
+        <button onclick="switchAdminSection('students')" id="subtab-students" class="py-3 px-1 border-b-2 border-transparent text-slate-500 hover:text-slate-700 font-semibold text-sm flex items-center gap-2">
+          <i data-lucide="users" class="w-4 h-4"></i> Students & Batches
+        </button>
+      </div>
+    </div>
+
+    <!-- Content Area -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+
+      <!-- ================= ADMIN DASHBOARD ================= -->
+      <div id="adminDashboardSection" class="space-y-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
+            <div>
+              <p class="text-xs font-semibold uppercase text-slate-500">Total Students</p>
+              <h3 id="statTotalStudents" class="text-2xl font-bold text-slate-900 mt-1">0</h3>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+              <i data-lucide="users" class="w-6 h-6"></i>
+            </div>
+          </div>
+
+          <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
+            <div>
+              <p class="text-xs font-semibold uppercase text-slate-500">Collected Fees</p>
+              <h3 id="statTotalCollected" class="text-2xl font-bold text-emerald-600 mt-1">₹0</h3>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+              <i data-lucide="check-circle-2" class="w-6 h-6"></i>
+            </div>
+          </div>
+
+          <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
+            <div>
+              <p class="text-xs font-semibold uppercase text-slate-500">Pending Dues</p>
+              <h3 id="statPendingDues" class="text-2xl font-bold text-amber-600 mt-1">₹0</h3>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+              <i data-lucide="clock-3" class="w-6 h-6"></i>
+            </div>
+          </div>
+
+          <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
+            <div>
+              <p class="text-xs font-semibold uppercase text-slate-500">Defaulters (Overdue)</p>
+              <h3 id="statDefaulters" class="text-2xl font-bold text-rose-600 mt-1">0</h3>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center">
+              <i data-lucide="alert-triangle" class="w-6 h-6"></i>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div class="lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs">
+            <h3 class="text-base font-bold text-slate-900 mb-1">Fee Collection Analytics</h3>
+            <p class="text-xs text-slate-500 mb-4">Paid vs pending distributions</p>
+            <div class="h-64">
+              <canvas id="feeChart"></canvas>
+            </div>
+          </div>
+
+          <div class="bg-gradient-to-br from-slate-900 to-indigo-950 text-white p-6 rounded-2xl shadow-lg flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between">
+                <span class="text-xs uppercase tracking-widest text-indigo-300 font-semibold">Active UPI Gateway</span>
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+              </div>
+              
+              <div class="mt-4 p-4 rounded-xl bg-white/10 backdrop-blur-md border border-white/10">
+                <p class="text-xs text-indigo-200">Merchant / Payee Name</p>
+                <p id="dashMerchantName" class="text-base font-bold text-white tracking-wide">Apex Academy</p>
+                <div class="mt-3 pt-3 border-t border-white/10">
+                  <p class="text-xs text-indigo-200">Linked UPI ID (VPA)</p>
+                  <p id="dashVpa" class="font-mono text-emerald-300 font-semibold text-sm">tutor@okaxis</p>
+                </div>
+              </div>
+              <p class="text-xs text-slate-300 mt-3 leading-relaxed">
+                Fees paid through generated student QR codes route directly into your linked bank account via NPCI UPI protocol.
+              </p>
+            </div>
+
+            <div class="mt-4 space-y-2">
+              <button onclick="openModal('addStudentModal')" class="w-full bg-brand-500 hover:bg-brand-600 text-white text-xs font-semibold py-2.5 rounded-xl transition flex items-center justify-center gap-2">
+                <i data-lucide="user-plus" class="w-4 h-4"></i> Add New Student
+              </button>
+              <button onclick="openModal('settingsModal')" class="w-full bg-white/10 hover:bg-white/20 text-white text-xs font-semibold py-2.5 rounded-xl transition flex items-center justify-center gap-2">
+                <i data-lucide="sliders" class="w-4 h-4"></i> Configure UPI ID
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= STUDENTS TABLE ================= -->
+      <div id="adminStudentsSection" class="space-y-6 hidden">
+        <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div class="relative flex-1">
+            <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-3"></i>
+            <input type="text" id="searchInput" oninput="renderStudentsTable()" placeholder="Search by student name or phone..." 
+              class="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none" />
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2">
+            <select id="batchFilter" onchange="renderStudentsTable()" class="py-2 px-3 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 bg-white">
+              <option value="ALL">All Batches</option>
+              <option value="Class 10 - Science">Class 10 - Science</option>
+              <option value="Class 10 - Math">Class 10 - Math</option>
+              <option value="Class 12 - Physics">Class 12 - Physics</option>
+              <option value="Class 12 - Chemistry">Class 12 - Chemistry</option>
+              <option value="Class 9 - Foundation">Class 9 - Foundation</option>
+            </select>
+
+            <select id="statusFilter" onchange="renderStudentsTable()" class="py-2 px-3 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 bg-white">
+              <option value="ALL">All Status</option>
+              <option value="Paid">Paid</option>
+              <option value="Pending">Pending</option>
+              <option value="Overdue">Overdue</option>
+            </select>
+
+            <button onclick="openModal('addStudentModal')" class="bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold px-4 py-2 rounded-xl transition flex items-center gap-1.5 shadow-sm">
+              <i data-lucide="plus" class="w-4 h-4"></i>
+              <span>Add Student</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="border-b border-slate-200 bg-slate-50 text-[11px] font-bold uppercase text-slate-500">
+                  <th class="py-3 px-4 sm:px-6">Student Details</th>
+                  <th class="py-3 px-4">Batch</th>
+                  <th class="py-3 px-4">Monthly Fee</th>
+                  <th class="py-3 px-4">Due Date</th>
+                  <th class="py-3 px-4">Status</th>
+                  <th class="py-3 px-4 text-center">Payment</th>
+                  <th class="py-3 px-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="studentTableBody" class="divide-y divide-slate-100 text-sm"></tbody>
+            </table>
+          </div>
+          <div id="tableEmptyState" class="hidden text-center py-10">
+            <p class="text-sm font-semibold text-slate-600">No students match your criteria.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= STUDENT / PARENT VIEW ================= -->
+      <div id="studentPortalSection" class="space-y-6 hidden">
+        <div class="bg-gradient-to-r from-brand-700 to-indigo-800 text-white rounded-2xl p-6 shadow-md">
+          <div class="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <span class="px-2.5 py-1 bg-white/20 rounded-full text-xs font-semibold">Student Portal</span>
+              <h2 id="spStudentName" class="text-2xl font-bold mt-2">Welcome</h2>
+              <p id="spStudentBatch" class="text-indigo-200 text-sm mt-1">Batch</p>
+            </div>
+            <div class="bg-white/10 backdrop-blur-md px-4 py-3 rounded-xl border border-white/20">
+              <span class="text-xs text-indigo-200 block">Registered Phone</span>
+              <span id="spParentPhone" class="font-mono text-sm font-semibold">+91 0000000000</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold uppercase text-slate-400">Current Fee Status</span>
+                <span id="spStatusBadge" class="px-2.5 py-1 text-xs font-bold rounded-full bg-amber-100 text-amber-800">Pending</span>
+              </div>
+              <div class="mt-4">
+                <span class="text-xs text-slate-500">Amount Payable</span>
+                <h3 id="spFeeAmount" class="text-3xl font-extrabold text-slate-900 mt-0.5">₹0</h3>
+              </div>
+              <div class="mt-4 text-xs space-y-1.5 border-t pt-3 text-slate-600">
+                <div class="flex justify-between">
+                  <span class="text-slate-400">Due Date:</span>
+                  <span id="spDueDate" class="font-semibold text-slate-700">--</span>
+                </div>
+              </div>
+            </div>
+            <div class="mt-6 pt-3" id="spActionBtnArea"></div>
+          </div>
+
+          <div class="md:col-span-2 bg-white rounded-2xl p-6 border border-slate-200 shadow-xs flex flex-col sm:flex-row items-center gap-6">
+            <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200 flex flex-col items-center">
+              <img id="spDynamicQrImage" src="" alt="Dynamic UPI QR" class="w-40 h-40 rounded-xl bg-white shadow-xs" />
+              <span class="text-[11px] text-slate-500 font-semibold mt-2">Scan with any UPI App</span>
+            </div>
+
+            <div class="flex-1 space-y-3 text-center sm:text-left">
+              <h4 class="font-bold text-slate-900">Direct Bank UPI Transfer</h4>
+              <p class="text-xs text-slate-500 leading-relaxed">
+                Scan with Google Pay, PhonePe, Paytm, or BHIM. Amount and payee details are dynamically encoded.
+              </p>
+              <div class="flex flex-wrap gap-2 pt-1 justify-center sm:justify-start">
+                <a id="spUpiDeepLink" href="#" class="inline-flex items-center gap-1.5 px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-semibold shadow-sm transition">
+                  <i data-lucide="smartphone" class="w-4 h-4"></i> Open in UPI App
+                </a>
+                <button onclick="copyCurrentStudentUpiLink()" class="inline-flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-medium transition">
+                  <i data-lucide="copy" class="w-3.5 h-3.5"></i> Copy Link
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs">
+          <h4 class="font-bold text-slate-900 text-sm mb-4">Payment Receipts</h4>
+          <div id="spReceiptsList" class="divide-y divide-slate-100 text-sm"></div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- ==================== MODALS ==================== -->
+
+  <!-- Dynamic UPI Modal -->
+  <div id="upiPayModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white max-w-sm w-full rounded-2xl shadow-2xl overflow-hidden border">
+      <div class="bg-slate-900 text-white px-5 py-3.5 flex items-center justify-between">
+        <h3 class="font-bold text-sm">Scan & Pay Fee</h3>
+        <button onclick="closeModal('upiPayModal')" class="text-slate-400 hover:text-white">&times;</button>
+      </div>
+      <div class="p-5 text-center space-y-4">
+        <div class="bg-slate-50 p-2.5 rounded-xl border text-left flex justify-between items-center text-xs">
+          <div>
+            <p id="modalStudentName" class="font-bold text-slate-800"></p>
+            <p id="modalStudentBatch" class="text-slate-500 text-[11px]"></p>
+          </div>
+          <p id="modalStudentAmount" class="text-base font-extrabold text-emerald-600">₹0</p>
+        </div>
+        <div class="flex justify-center">
+          <img id="modalQrImage" src="" alt="Dynamic QR" class="w-48 h-48 rounded-xl border p-2 bg-white" />
+        </div>
+        <a id="modalDeepLinkBtn" href="#" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-semibold py-2 rounded-xl block text-xs shadow-md transition">
+          Open in PhonePe / GPay
+        </a>
+        <button onclick="confirmPaymentFromModal()" class="w-full bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-semibold py-2 rounded-xl text-xs transition">
+          Mark as Paid (Admin Override)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings Modal -->
+  <div id="settingsModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white max-w-md w-full rounded-2xl shadow-2xl overflow-hidden border">
+      <div class="bg-slate-900 text-white px-5 py-3.5 flex items-center justify-between">
+        <h3 class="font-bold text-sm">Tutor UPI Configuration</h3>
+        <button onclick="closeModal('settingsModal')" class="text-slate-400 hover:text-white">&times;</button>
+      </div>
+      <form onsubmit="saveSettings(event)" class="p-5 space-y-4">
+        <div>
+          <label class="block text-xs font-semibold uppercase text-slate-500 mb-1">Tutor UPI ID (VPA)</label>
+          <input type="text" id="settingUpiId" required class="w-full px-3 py-2 border rounded-xl text-sm font-mono" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold uppercase text-slate-500 mb-1">Merchant / Tutor Name</label>
+          <input type="text" id="settingMerchantName" required class="w-full px-3 py-2 border rounded-xl text-sm" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold uppercase text-slate-500 mb-1">Contact Email</label>
+          <input type="email" id="settingInstituteEmail" required class="w-full px-3 py-2 border rounded-xl text-sm" />
+        </div>
+        <div class="flex gap-2 pt-2">
+          <button type="button" onclick="closeModal('settingsModal')" class="flex-1 py-2 border rounded-xl text-xs">Cancel</button>
+          <button type="submit" class="flex-1 py-2 bg-brand-600 text-white rounded-xl text-xs font-semibold">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add Student Modal -->
+  <div id="addStudentModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white max-w-md w-full rounded-2xl shadow-2xl overflow-hidden border">
+      <div class="bg-slate-900 text-white px-5 py-3.5 flex items-center justify-between">
+        <h3 class="font-bold text-sm" id="studentModalTitle">Add New Student</h3>
+        <button onclick="closeModal('addStudentModal')" class="text-slate-400 hover:text-white">&times;</button>
+      </div>
+      <form onsubmit="handleStudentSubmit(event)" class="p-5 space-y-3">
+        <input type="hidden" id="formStudentId" value="" />
+        <div>
+          <label class="block text-xs font-semibold text-slate-500">Student Name</label>
+          <input type="text" id="formStudentName" required class="w-full px-3 py-1.5 border rounded-lg text-sm" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-500">Parent Phone</label>
+          <input type="tel" id="formParentPhone" required class="w-full px-3 py-1.5 border rounded-lg text-sm" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-500">Batch</label>
+          <select id="formBatch" class="w-full px-3 py-1.5 border rounded-lg text-sm">
+            <option value="Class 10 - Science">Class 10 - Science</option>
+            <option value="Class 10 - Math">Class 10 - Math</option>
+            <option value="Class 12 - Physics">Class 12 - Physics</option>
+            <option value="Class 12 - Chemistry">Class 12 - Chemistry</option>
+            <option value="Class 9 - Foundation">Class 9 - Foundation</option>
+          </select>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-500">Monthly Fee (₹)</label>
+            <input type="number" id="formMonthlyFee" required class="w-full px-3 py-1.5 border rounded-lg text-sm" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-500">Due Date</label>
+            <input type="date" id="formDueDate" required class="w-full px-3 py-1.5 border rounded-lg text-sm" />
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-500">Fee Status</label>
+          <select id="formFeeStatus" class="w-full px-3 py-1.5 border rounded-lg text-sm">
+            <option value="Pending">Pending</option>
+            <option value="Paid">Paid</option>
+            <option value="Overdue">Overdue</option>
+          </select>
+        </div>
+        <div class="flex gap-2 pt-2">
+          <button type="button" onclick="closeModal('addStudentModal')" class="flex-1 py-2 border rounded-xl text-xs">Cancel</button>
+          <button type="submit" class="flex-1 py-2 bg-brand-600 text-white rounded-xl text-xs font-semibold">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Printable Receipt Modal -->
+  <div id="receiptModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white max-w-lg w-full rounded-2xl shadow-2xl overflow-hidden border">
+      <div class="no-print bg-slate-900 text-white px-5 py-3 flex justify-between items-center">
+        <h3 class="font-bold text-sm">Official Fee Receipt</h3>
+        <button onclick="closeModal('receiptModal')" class="text-slate-400 hover:text-white">&times;</button>
+      </div>
+      <div class="p-6">
+        <div id="printableReceipt" class="border p-5 rounded-xl text-xs space-y-3">
+          <div class="flex justify-between border-b pb-3">
+            <div>
+              <h2 id="receiptInstName" class="text-base font-bold">APEX ACADEMY</h2>
+              <p id="receiptInstEmail" class="text-slate-500 text-[11px]">contact@apexacademy.com</p>
+            </div>
+            <div class="text-right">
+              <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded font-bold text-[10px]">PAID</span>
+              <p id="receiptNo" class="font-mono mt-1 text-[11px]">REC-0001</p>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-2 bg-slate-50 p-2.5 rounded-lg">
+            <div>
+              <p class="text-slate-400 text-[10px] uppercase font-bold">Student</p>
+              <p id="receiptStudentName" class="font-bold text-sm">--</p>
+              <p id="receiptBatch" class="text-slate-600">--</p>
+            </div>
+            <div>
+              <p class="text-slate-400 text-[10px] uppercase font-bold">Parent Contact</p>
+              <p id="receiptParentPhone" class="font-mono">--</p>
+            </div>
+          </div>
+          <div class="border-t pt-2 flex justify-between font-bold text-sm">
+            <span>Total Paid Amount:</span>
+            <span id="receiptTotal" class="text-emerald-600">₹0</span>
+          </div>
+          <div class="border-t pt-2 text-[10px] text-slate-500">
+            <p>Beneficiary UPI: <span id="receiptPayeeVpa" class="font-mono font-medium"></span></p>
+          </div>
+        </div>
+      </div>
+      <div class="no-print bg-slate-50 px-5 py-3 border-t flex justify-between">
+        <button onclick="closeModal('receiptModal')" class="px-3 py-1.5 border rounded-lg text-xs">Close</button>
+        <button onclick="window.print()" class="px-4 py-1.5 bg-brand-600 text-white rounded-lg text-xs font-semibold">Print Receipt</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== JAVASCRIPT CODE ==================== -->
+  <script>
+    const STORAGE_KEY_STUDENTS = 'edupay_students_data_v2';
+    const STORAGE_KEY_SETTINGS = 'edupay_settings_v2';
+
+    const defaultSettings = {
+      upiId: 'tutor@okaxis',
+      merchantName: 'Apex Academy (Rahul Verma)',
+      instituteEmail: 'contact@apexacademy.com'
+    };
+
+    const initialStudents = [
+      {
+        id: 'STU-101',
+        name: 'Aarav Sharma',
+        parentPhone: '9876543210',
+        batch: 'Class 10 - Science',
+        monthlyFee: 2500,
+        dueDate: '2026-10-10',
+        status: 'Pending',
+        paymentHistory: []
+      },
+      {
+        id: 'STU-102',
+        name: 'Priya Patel',
+        parentPhone: '9823456781',
+        batch: 'Class 10 - Math',
+        monthlyFee: 2000,
+        dueDate: '2026-09-15',
+        status: 'Overdue',
+        paymentHistory: []
+      },
+      {
+        id: 'STU-103',
+        name: 'Rohan Gupta',
+        parentPhone: '9123456789',
+        batch: 'Class 12 - Physics',
+        monthlyFee: 3200,
+        dueDate: '2026-09-05',
+        status: 'Paid',
+        paymentHistory: [{ receiptNo: 'REC-2026-0082', date: '2026-09-04', amount: 3200, refId: 'UPI/263819283719' }]
+      }
+    ];
+
+    // Safe load helper
+    function loadStorageData(key, fallback) {
+      try {
+        const item = localStorage.getItem(key);
+        return item ? JSON.parse(item) : fallback;
+      } catch (e) {
+        return fallback;
+      }
+    }
+
+    let appSettings = loadStorageData(STORAGE_KEY_SETTINGS, defaultSettings);
+    let students = loadStorageData(STORAGE_KEY_STUDENTS, initialStudents);
+    let currentRole = null;
+    let currentActiveStudent = null;
+    let currentPayingStudent = null;
+    let chartInstance = null;
+
+    function persistData() {
+      try {
+        localStorage.setItem(STORAGE_KEY_STUDENTS, JSON.stringify(students));
+        localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(appSettings));
+      } catch (e) {
+        console.warn('LocalStorage save failed:', e);
+      }
+    }
+
+    // Safe Lucide execution
+    function safeRenderIcons() {
+      if (window.lucide && typeof lucide.createIcons === 'function') {
+        try { lucide.createIcons(); } catch (e) {}
+      }
+    }
+
+    // Modal Helpers
+    function openModal(id) {
+      const el = document.getElementById(id);
+      if (el) el.classList.remove('hidden');
+      safeRenderIcons();
+    }
+    function closeModal(id) {
+      const el = document.getElementById(id);
+      if (el) el.classList.add('hidden');
+    }
+
+    // Toast Utility
+    function showToast(msg, type = 'success') {
+      const c = document.getElementById('toastContainer');
+      if (!c) return;
+      const t = document.createElement('div');
+      t.className = `px-4 py-2.5 rounded-xl shadow-lg text-xs font-semibold text-white pointer-events-auto transition-all ${
+        type === 'error' ? 'bg-rose-600' : 'bg-emerald-600'
+      }`;
+      t.textContent = msg;
+      c.appendChild(t);
+      setTimeout(() => t.remove(), 3500);
+    }
+
+    function showLoginAlert(msg, isError = true) {
+      const box = document.getElementById('loginAlertBox');
+      box.classList.remove('hidden');
+      box.className = `mb-4 p-3 rounded-xl text-xs font-semibold ${isError ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'}`;
+      box.textContent = msg;
+    }
+
+    // Switch Login Tabs
+    function switchLoginTab(role) {
+      const tabAdmin = document.getElementById('tabAdmin');
+      const tabStudent = document.getElementById('tabStudent');
+      const adminForm = document.getElementById('adminLoginForm');
+      const studentForm = document.getElementById('studentLoginForm');
+      document.getElementById('loginAlertBox').classList.add('hidden');
+
+      if (role === 'admin') {
+        tabAdmin.className = 'flex-1 py-3.5 border-b-2 border-brand-600 text-brand-600 font-bold flex items-center justify-center gap-1.5';
+        tabStudent.className = 'flex-1 py-3.5 text-slate-500 hover:text-slate-700 flex items-center justify-center gap-1.5';
+        adminForm.classList.remove('hidden');
+        studentForm.classList.add('hidden');
+      } else {
+        tabStudent.className = 'flex-1 py-3.5 border-b-2 border-brand-600 text-brand-600 font-bold flex items-center justify-center gap-1.5';
+        tabAdmin.className = 'flex-1 py-3.5 text-slate-500 hover:text-slate-700 flex items-center justify-center gap-1.5';
+        studentForm.classList.remove('hidden');
+        adminForm.classList.add('hidden');
+        populateStudentSelect();
+      }
+      safeRenderIcons();
+    }
+
+    function populateStudentSelect() {
+      const select = document.getElementById('quickStudentSelect');
+      select.innerHTML = '<option value="">-- Pick Demo Student --</option>';
+      students.forEach(st => {
+        const opt = document.createElement('option');
+        opt.value = st.parentPhone;
+        opt.textContent = `${st.name} (${st.batch}) - Status: ${st.status}`;
+        select.appendChild(opt);
+      });
+    }
+
+    function autoFillStudentPhone(phone) {
+      if (phone) {
+        document.getElementById('studentPhone').value = phone;
+      }
+    }
+
+    // Admin Login Logic
+    function executeAdminLogin() {
+      const pass = document.getElementById('adminPassword').value.trim();
+      if (pass === 'admin123') {
+        currentRole = 'admin';
+        launchApp();
+        showToast('Logged in as Admin');
+      } else {
+        showLoginAlert('Incorrect password! Use "admin123" for demo.');
+      }
+    }
+
+    function quickAdminLogin() {
+      document.getElementById('adminPassword').value = 'admin123';
+      executeAdminLogin();
+    }
+
+    // Student Login Logic
+    function executeStudentLogin() {
+      const phoneInput = document.getElementById('studentPhone').value.trim();
+      if (!phoneInput) {
+        showLoginAlert('Please enter a parent mobile number.');
+        return;
+      }
+      const student = students.find(s => s.parentPhone === phoneInput || s.parentPhone.slice(-10) === phoneInput.slice(-10));
+      if (student) {
+        currentRole = 'student';
+        currentActiveStudent = student;
+        launchApp();
+        showToast(`Welcome, ${student.name}`);
+      } else {
+        showLoginAlert(`No student found for phone "${phoneInput}". Try "9876543210".`);
+      }
+    }
+
+    function quickStudentLogin() {
+      document.getElementById('studentPhone').value = '9876543210';
+      executeStudentLogin();
+    }
+
+    // Transition to App
+    function launchApp() {
+      document.getElementById('authScreen').classList.add('hidden');
+      document.getElementById('mainApp').classList.remove('hidden');
+
+      const cleanName = (appSettings.merchantName || 'Apex Academy').split('(')[0];
+      document.getElementById('navInstituteName').textContent = cleanName;
+      document.getElementById('navVpaPreview').textContent = appSettings.upiId || 'tutor@okaxis';
+      document.getElementById('dashMerchantName').textContent = appSettings.merchantName || 'Apex Academy';
+      document.getElementById('dashVpa').textContent = appSettings.upiId || 'tutor@okaxis';
+
+      if (currentRole === 'admin') {
+        document.getElementById('roleBadge').textContent = 'Admin Mode';
+        document.getElementById('adminVpaIndicator').classList.remove('hidden');
+        document.getElementById('adminSettingsBtn').classList.remove('hidden');
+        document.getElementById('adminTabNav').classList.remove('hidden');
+        document.getElementById('studentPortalSection').classList.add('hidden');
+        switchAdminSection('dashboard');
+        renderStudentsTable();
+      } else {
+        document.getElementById('roleBadge').textContent = 'Student View';
+        document.getElementById('adminVpaIndicator').classList.add('hidden');
+        document.getElementById('adminSettingsBtn').classList.add('hidden');
+        document.getElementById('adminTabNav').classList.add('hidden');
+        document.getElementById('adminDashboardSection').classList.add('hidden');
+        document.getElementById('adminStudentsSection').classList.add('hidden');
+        document.getElementById('studentPortalSection').classList.remove('hidden');
+        renderStudentPortal();
+      }
+
+      safeRenderIcons();
+    }
+
+    function logout() {
+      currentRole = null;
+      currentActiveStudent = null;
+      document.getElementById('mainApp').classList.add('hidden');
+      document.getElementById('authScreen').classList.remove('hidden');
+      document.getElementById('loginAlertBox').classList.add('hidden');
+      showToast('Logged out successfully');
+    }
+
+    function resetAppData() {
+      if (confirm('Reset demo data to initial state?')) {
+        localStorage.removeItem(STORAGE_KEY_STUDENTS);
+        localStorage.removeItem(STORAGE_KEY_SETTINGS);
+        students = [...initialStudents];
+        appSettings = { ...defaultSettings };
+        populateStudentSelect();
+        showLoginAlert('Demo data restored! Try logging in now.', false);
+      }
+    }
+
+    // Admin Views
+    function switchAdminSection(section) {
+      const tabDash = document.getElementById('subtab-dashboard');
+      const tabStud = document.getElementById('subtab-students');
+      const dashSec = document.getElementById('adminDashboardSection');
+      const studSec = document.getElementById('adminStudentsSection');
+
+      if (section === 'dashboard') {
+        tabDash.className = 'py-3 px-1 border-b-2 border-brand-600 text-brand-600 font-semibold text-sm flex items-center gap-2';
+        tabStud.className = 'py-3 px-1 border-b-2 border-transparent text-slate-500 hover:text-slate-700 font-semibold text-sm flex items-center gap-2';
+        dashSec.classList.remove('hidden');
+        studSec.classList.add('hidden');
+        updateDashboardKPIs();
+      } else {
+        tabStud.className = 'py-3 px-1 border-b-2 border-brand-600 text-brand-600 font-semibold text-sm flex items-center gap-2';
+        tabDash.className = 'py-3 px-1 border-b-2 border-transparent text-slate-500 hover:text-slate-700 font-semibold text-sm flex items-center gap-2';
+        studSec.classList.remove('hidden');
+        dashSec.classList.add('hidden');
+        renderStudentsTable();
+      }
+      safeRenderIcons();
+    }
+
+    function updateDashboardKPIs() {
+      let totalCollected = 0;
+      let pendingDues = 0;
+      let defaulters = 0;
+      const today = new Date().toISOString().split('T')[0];
+
+      students.forEach(st => {
+        if (st.status === 'Paid') {
+          totalCollected += Number(st.monthlyFee);
+        } else {
+          pendingDues += Number(st.monthlyFee);
+          if (st.dueDate < today || st.status === 'Overdue') defaulters++;
+        }
+      });
+
+      document.getElementById('statTotalStudents').textContent = students.length;
+      document.getElementById('statTotalCollected').textContent = '₹' + totalCollected.toLocaleString('en-IN');
+      document.getElementById('statPendingDues').textContent = '₹' + pendingDues.toLocaleString('en-IN');
+      document.getElementById('statDefaulters').textContent = defaulters;
+
+      renderChart(totalCollected, pendingDues);
+    }
+
+    function renderChart(collected, pending) {
+      const ctx = document.getElementById('feeChart');
+      if (!ctx || !window.Chart) return;
+
+      try {
+        if (chartInstance) chartInstance.destroy();
+        chartInstance = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: ['July', 'August', 'September (Current)', 'October (Due)'],
+            datasets: [
+              { label: 'Collected (₹)', data: [18000, 22000, collected, 12000], backgroundColor: '#4f46e5', borderRadius: 6 },
+              { label: 'Pending (₹)', data: [1200, 2000, pending, 8000], backgroundColor: '#fbbf24', borderRadius: 6 }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom' } }
+          }
+        });
+      } catch (err) {
+        console.warn('Chart rendering skipped:', err);
+      }
+    }
+
+    // UPI Payload Builder
+    function buildUpiPayload(student) {
+      const pa = encodeURIComponent(appSettings.upiId || 'tutor@okaxis');
+      const pn = encodeURIComponent(appSettings.merchantName || 'Tuition Tutor');
+      const am = encodeURIComponent(student.monthlyFee);
+      const tn = encodeURIComponent(`Tuition Fee -${student.name}`);
+      return `upi://pay?pa=${pa}&pn=${pn}&am=${am}&tn=${tn}&cu=INR`;
+    }
+
+    // Student Table
+    function renderStudentsTable() {
+      const tbody = document.getElementById('studentTableBody');
+      const search = (document.getElementById('searchInput').value || '').toLowerCase().trim();
+      const batch = document.getElementById('batchFilter').value;
+      const status = document.getElementById('statusFilter').value;
+
+      const filtered = students.filter(s => {
+        const matchesSearch = s.name.toLowerCase().includes(search) || s.parentPhone.includes(search);
+        const matchesBatch = batch === 'ALL' || s.batch === batch;
+        const matchesStatus = status === 'ALL' || s.status === status;
+        return matchesSearch && matchesBatch && matchesStatus;
+      });
+
+      tbody.innerHTML = '';
+      filtered.forEach(st => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50 transition-colors border-b';
+
+        let badge = '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">Pending</span>';
+        if (st.status === 'Paid') badge = '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">Paid</span>';
+        if (st.status === 'Overdue') badge = '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-rose-100 text-rose-800">Overdue</span>';
+
+        tr.innerHTML = `
+          <td class="py-3 px-4 sm:px-6">
+            <div class="font-bold text-slate-800">${st.name}</div>
+            <div class="text-xs text-slate-400 font-mono">+91 ${st.parentPhone}</div>
+          </td>
+          <td class="py-3 px-4 text-xs">${st.batch}</td>
+          <td class="py-3 px-4 font-bold">₹${Number(st.monthlyFee).toLocaleString('en-IN')}</td>
+          <td class="py-3 px-4 text-xs">${st.dueDate}</td>
+          <td class="py-3 px-4">${badge}</td>
+          <td class="py-3 px-4 text-center">
+            ${st.status === 'Paid' ? 
+              `<button onclick="viewReceipt('${st.id}')" class="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-xs font-semibold rounded-lg">Receipt</button>` :
+              `<button onclick="openUpiModal('${st.id}')" class="px-3 py-1 bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold rounded-lg shadow-xs">Pay Fee</button>`
+            }
+          </td>
+          <td class="py-3 px-4 text-right">
+            <button onclick="deleteStudent('${st.id}')" class="text-rose-500 hover:text-rose-700 text-xs font-semibold p-1">Delete</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+      safeRenderIcons();
+    }
+
+    function openUpiModal(id) {
+      const student = students.find(s => s.id === id);
+      if (!student) return;
+      currentPayingStudent = student;
+
+      const payload = buildUpiPayload(student);
+      document.getElementById('modalStudentName').textContent = student.name;
+      document.getElementById('modalStudentBatch').textContent = student.batch;
+      document.getElementById('modalStudentAmount').textContent = '₹' + Number(student.monthlyFee).toLocaleString('en-IN');
+      document.getElementById('modalQrImage').src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(payload)}`;
+      document.getElementById('modalDeepLinkBtn').href = payload;
+
+      openModal('upiPayModal');
+    }
+
+    function confirmPaymentFromModal() {
+      if (!currentPayingStudent) return;
+      currentPayingStudent.status = 'Paid';
+      persistData();
+      closeModal('upiPayModal');
+      showToast(`Marked ${currentPayingStudent.name} as Paid!`);
+      if (currentRole === 'admin') {
+        renderStudentsTable();
+        updateDashboardKPIs();
+      } else {
+        renderStudentPortal();
+      }
+    }
+
+    function deleteStudent(id) {
+      if (confirm('Delete this student?')) {
+        students = students.filter(s => s.id !== id);
+        persistData();
+        renderStudentsTable();
+        updateDashboardKPIs();
+      }
+    }
+
+    function renderStudentPortal() {
+      const st = currentActiveStudent;
+      if (!st) return;
+
+      document.getElementById('spStudentName').textContent = `Welcome, ${st.name}`;
+      document.getElementById('spStudentBatch').textContent = st.batch;
+      document.getElementById('spParentPhone').textContent = `+91 ${st.parentPhone}`;
+      document.getElementById('spFeeAmount').textContent = '₹' + Number(st.monthlyFee).toLocaleString('en-IN');
+      document.getElementById('spDueDate').textContent = st.dueDate;
+
+      const badge = document.getElementById('spStatusBadge');
+      const actionArea = document.getElementById('spActionBtnArea');
+      badge.textContent = st.status;
+
+      if (st.status === 'Paid') {
+        badge.className = 'px-2.5 py-1 text-xs font-bold rounded-full bg-emerald-100 text-emerald-800';
+        actionArea.innerHTML = `<button onclick="viewReceipt('${st.id}')" class="w-full bg-slate-900 text-white font-semibold py-2 rounded-xl text-xs">View Receipt</button>`;
+      } else {
+        badge.className = 'px-2.5 py-1 text-xs font-bold rounded-full bg-amber-100 text-amber-800';
+        actionArea.innerHTML = `<button onclick="openUpiModal('${st.id}')" class="w-full bg-brand-600 text-white font-semibold py-2 rounded-xl text-xs">Pay via UPI QR</button>`;
+      }
+
+      const payload = buildUpiPayload(st);
+      document.getElementById('spDynamicQrImage').src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(payload)}`;
+      document.getElementById('spUpiDeepLink').href = payload;
+
+      safeRenderIcons();
+    }
+
+    function copyCurrentStudentUpiLink() {
+      if (!currentActiveStudent) return;
+      const payload = buildUpiPayload(currentActiveStudent);
+      navigator.clipboard.writeText(payload).then(() => showToast('UPI Link copied!'));
+    }
+
+    function viewReceipt(id) {
+      const st = students.find(s => s.id === id);
+      if (!st) return;
+      document.getElementById('receiptInstName').textContent = (appSettings.merchantName || 'Apex Academy').toUpperCase();
+      document.getElementById('receiptInstEmail').textContent = appSettings.instituteEmail;
+      document.getElementById('receiptStudentName').textContent = st.name;
+      document.getElementById('receiptBatch').textContent = st.batch;
+      document.getElementById('receiptParentPhone').textContent = '+91 ' + st.parentPhone;
+      document.getElementById('receiptTotal').textContent = '₹' + Number(st.monthlyFee).toLocaleString('en-IN');
+      document.getElementById('receiptPayeeVpa').textContent = appSettings.upiId;
+      openModal('receiptModal');
+    }
+
+    function saveSettings(e) {
+      e.preventDefault();
+      appSettings.upiId = document.getElementById('settingUpiId').value.trim();
+      appSettings.merchantName = document.getElementById('settingMerchantName').value.trim();
+      appSettings.instituteEmail = document.getElementById('settingInstituteEmail').value.trim();
+      persistData();
+      closeModal('settingsModal');
+      showToast('Settings saved!');
+      launchApp();
+    }
+
+    function handleStudentSubmit(e) {
+      e.preventDefault();
+      const newSt = {
+        id: 'STU-' + Math.floor(100 + Math.random() * 900),
+        name: document.getElementById('formStudentName').value.trim(),
+        parentPhone: document.getElementById('formParentPhone').value.trim(),
+        batch: document.getElementById('formBatch').value,
+        monthlyFee: Number(document.getElementById('formMonthlyFee').value),
+        dueDate: document.getElementById('formDueDate').value,
+        status: document.getElementById('formFeeStatus').value,
+        paymentHistory: []
+      };
+      students.unshift(newSt);
+      persistData();
+      closeModal('addStudentModal');
+      renderStudentsTable();
+      updateDashboardKPIs();
+      showToast('Student added!');
+    }
+
+    // Initialize
+    window.addEventListener('DOMContentLoaded', () => {
+      safeRenderIcons();
+      populateStudentSelect();
+      document.getElementById('settingUpiId').value = appSettings.upiId;
+      document.getElementById('settingMerchantName').value = appSettings.merchantName;
+      document.getElementById('settingInstituteEmail').value = appSettings.instituteEmail;
+      document.getElementById('formDueDate').value = new Date().toISOString().split('T')[0];
+    });
+  </script>
+</body>
+</html>
