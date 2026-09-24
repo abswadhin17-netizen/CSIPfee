@@ -1012,38 +1012,60 @@
     }
 
     // ================= AUTHENTICATION =================
+    // ================= FAIL-SAFE LOGIN LOGIC =================
     function executeAdminLogin() {
       const inputId = document.getElementById('adminEmail').value.trim().toLowerCase();
-      const inputPass = document.getElementById('adminPassword').value.trim();
+      const inputPass = document.getElementById('adminPassword').value.trim();  
+      if (!inputId || !inputPass) {
+        showLoginAlert('Please enter both Admin ID/Email and Password.');
+        return;
+      }
 
+      // Ensure adminUsers array exists
+      if (!adminUsers || adminUsers.length === 0) {
+        adminUsers = defaultAdmins;
+      }
       const matchingAdmin = adminUsers.find(a => 
         (a.email.toLowerCase() === inputId || a.username.toLowerCase() === inputId) && 
         a.password === inputPass
-      );
-
+                                           );
       if (matchingAdmin) {
         currentRole = 'admin';
         currentActiveAdmin = matchingAdmin;
         hideLoginAlert();
         launchApp();
       } else {
-        showLoginAlert('Invalid Admin ID/Email or Password!');
+        showLoginAlert('Invalid Admin Credentials. Default: absadmin / CSIP@2026Password');
       }
     }
 
     function executeStudentLogin() {
-      const phone = document.getElementById('studentPhoneInput').value.trim();
-      const match = students.find(s => s.parentPhone === phone);
+      const inputPhone = document.getElementById('studentPhoneInput').value.trim();
 
+      if (!inputPhone) {   
+        showLoginAlert('Please enter a 10-digit mobile number.');
+        return;
+      }
+
+      // Convert both values to String to prevent String vs Number matching errors
+      const match = students.find(s => 
+        s.parentPhone && String(s.parentPhone).trim() === String(inputPhone).trim()
+
+                                 );
       if (match) {
         currentRole = 'student';
         currentActiveStudent = match;
         hideLoginAlert();
         launchApp();
       } else {
-        showLoginAlert('No student found registered with this Mobile Number.');
+        showLoginAlert('No student found registered with mobile number: ' + inputPhone);
       }
     }
+
+    // Expose functions globally
+    window.executeAdminLogin = executeAdminLogin;
+    window.executeStudentLogin = executeStudentLogin;
+
 
     function showLoginAlert(msg) {
       const box = document.getElementById('loginAlert');
