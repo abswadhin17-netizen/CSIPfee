@@ -917,11 +917,88 @@
       appId: "1:400383606564:web:be8c51934ae7230006bdb1"
     };
     
-    // Initialize Firebase & Firestore Database
-    firebase.initializeApp(firebaseConfig);
+
+    // Initialize Firebase & Firestore
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
     const db = firebase.firestore();
+    // Default seed students if database is empty
+    const defaultStudents = [
+      {id: "STU-101",name: "Aarav Sharma",parentPhone: "9876543210",batch: "Class 12 - CS",monthlyFee: 1500,dueDate: "2026-10-05",status: "Pending",paymentHistory: []},
+
+      {id: "STU-102",name: "Priya Patel",parentPhone: "9123456789",batch: "Class 11 - IP",monthlyFee: 1200,dueDate: "2026-10-10",status: "Paid",paymentHistory: []}
+
+    ];
+    
+    // REAL-TIME LISTENER WITH AUTO-SEEDING
+    function listenToStudentsFromFirebase() {
+      db.collection('students').onSnapshot(async (snapshot) => { 
+        if (snapshot.empty) {
+          console.log("Database empty. Auto-seeding initial students to Firebase...");     
+          for (const st of defaultStudents) {    
+            await db.collection('students').doc(st.id).set(st);  
+          }
+          return;
+        }
+        students = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        renderStudentsTable();
+        updateDashboardKPIs();
+      }, (error) => {
+        console.error("Firebase Connection Error:", error);
+        alert("Firebase Error: " + error.message + "\nCheck browser console (F12) for details.");
+      });
+    }
 
 
+    // ================= BULLETPROOF LOGIN LOGIC =================
+    function executeAdminLogin() {
+      const inputId = (document.getElementById('adminEmail').value || '').trim().toLowerCase();
+      const inputPass = (document.getElementById('adminPassword').value || '').trim();
+      if (!inputId || !inputPass) {
+        showLoginAlert('Please enter Admin ID and Password.');
+        return;
+      }
+      // Check admin credentials
+      if ((inputId === 'absadmin' || inputId === 'admin@csipbyabs.com') && inputPass === 'CSIP@2026Password') {
+        currentRole = 'admin'; 
+        currentActiveAdmin = { name: "ABS Admin", email: inputId };
+        hideLoginAlert();
+        launchApp();
+      } else {
+        showLoginAlert('Invalid Admin Credentials! Use: absadmin / CSIP@2026Password');
+      }
+    }
+    function executeStudentLogin() {
+      const inputPhone = (document.getElementById('studentPhoneInput').value || '').trim();
+      if (!inputPhone) {
+        showLoginAlert('Please enter a 10-digit mobile number.');
+        return;
+      }
+      if (!students || students.length === 0) {
+        showLoginAlert('Connecting to database... Please wait 3 seconds and try again.');
+        return;
+      }
+ 
+      // Normalize phone matching (removes spaces, treats numbers as strings)
+      const match = students.find(s => 
+        s.parentPhone && String(s.parentPhone).replace(/\D/g, '') === inputPhone.replace(/\D/g, '')
+
+                                 );
+      if (match) {
+        currentRole = 'student';
+        currentActiveStudent = match;
+        hideLoginAlert(); 
+        launchApp();
+      } else {
+        showLoginAlert(`No student found for: ${inputPhone}.\nTry test number: 9876543210`);
+      }
+    }
+    window.executeAdminLogin = executeAdminLogin;
+    window.executeStudentLogin = executeStudentLogin;
     
     // Storage Keys
     const STORAGE_KEY_STUDENTS = 'csipbyabs_students_v3_fresh';
