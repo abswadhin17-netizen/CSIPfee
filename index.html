@@ -963,10 +963,10 @@
           </td>
           <td class="py-3 px-4 text-right">
             <div class="flex items-center justify-end gap-1">
-              <button onclick="editStudent('${st.id}')" title="Edit Student & Password" class="text-brand-600 hover:bg-brand-50 p-1 rounded">
+              <button type="button" onclick="editStudent('${st.id}')" title="Edit Student & Password" class="text-brand-600 hover:bg-brand-50 p-1 rounded">
                 <i data-lucide="edit-2" class="w-4 h-4"></i>
               </button>
-              <button onclick="deleteStudent('${st.id}')" title="Delete Student" class="text-rose-500 hover:bg-rose-50 p-1 rounded">
+              <button type="button" onclick="deleteStudent('${st.id}')" title="Delete Student" class="text-rose-500 hover:bg-rose-50 p-1 rounded">
                 <i data-lucide="trash-2" class="w-4 h-4"></i>
               </button>
             </div>
@@ -1052,12 +1052,81 @@
       showToast(`Payment marked as Paid for ${currentPayingStudent.name}!`);
     }
 
-    function deleteStudent(id) {
-      if (confirm('Delete this student record?')) {
-        students = students.filter(s => s.id !== id);
-        persistData();
+    // 1. FAIL-SAFE DELETE FUNCTION
+function deleteStudent(id) {
+  // Ensure 'students' exists
+  if (!Array.isArray(students)) return;
+
+  const st = students.find(s => s.id === id);
+  if (!st) {
+    alert('Student record not found!');
+    return;
+  }
+
+  if (confirm(`Are you sure you want to delete ${st.name}?`)) {
+    // Remove student from array
+    students = students.filter(s => s.id !== id);
+
+    // Persist to LocalStorage
+    localStorage.setItem(STORAGE_KEY_STUDENTS, JSON.stringify(students));
+
+    // Re-render table
+    renderStudentsTable();
+
+    // Call optional UI helpers safely
+    if (typeof updateDashboardKPIs === 'function') updateDashboardKPIs();
+    if (typeof showToast === 'function') showToast(`Deleted ${st.name}`);
+  }
+}
+
+// 2. FAIL-SAFE TABLE RENDERER
+    function renderStudentsTable() {
+      const tbody = document.getElementById('studentsTableBody');
+      if (!tbody) {
+        console.error('Table body element "#studentsTableBody" was not found in HTML!');
+        return;
       }
-    }
+      if (!students || students.length === 0) {
+        tbody.innerHTML = `
+        <tr>
+        <td colspan="8" class="text-center py-6 text-slate-400 text-xs">
+        No students found. Click "+ Add Student" to create one.
+        </td>
+        </tr>`;
+        return;
+      }
+
+  tbody.innerHTML = students.map(st => `
+    <tr class="border-b border-slate-100 hover:bg-slate-50/50 text-xs text-slate-700">
+      <td class="py-3 px-4 font-mono text-slate-500">${st.id}</td>
+      <td class="py-3 px-4 font-semibold text-slate-900">${st.name}</td>
+      <td class="py-3 px-4">${st.parentPhone}</td>
+      <td class="py-3 px-4"><span class="px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 font-medium">${st.batch}</span></td>
+      <td class="py-3 px-4 font-semibold">₹${st.monthlyFee}</td>
+      <td class="py-3 px-4 text-slate-500">${st.dueDate}</td>
+      <td class="py-3 px-4">
+        <span class="px-2 py-0.5 rounded-full text-xs font-semibold ${
+          st.status === 'Paid' ? 'bg-emerald-100 text-emerald-700' :
+          st.status === 'Overdue' ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700'
+        }">${st.status}</span>
+      </td>
+      <td class="py-3 px-4 text-right space-x-1">
+        <button type="button" onclick="editStudent('${st.id}')" class="text-brand-600 hover:text-brand-800 font-semibold px-2 py-1 rounded transition">
+          Edit
+        </button>
+        <button type="button" onclick="deleteStudent('${st.id}')" class="text-rose-500 hover:text-rose-700 font-semibold px-2 py-1 rounded transition">
+          Delete
+        </button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+// 3. EXPOSE TO GLOBAL SCOPE
+window.deleteStudent = deleteStudent;
+window.editStudent = editStudent;
+window.renderStudentsTable = renderStudentsTable;
+
 
     function copyCurrentStudentUpiLink() {
       if (!currentActiveStudent) return;
@@ -1180,6 +1249,12 @@
       safeRenderIcons();
       document.getElementById('formDueDate').value = new Date().toISOString().split('T')[0];
       checkSession();
+
+    // Add these lines at the very bottom of your <script> block:
+    window.editStudent = editStudent;
+    window.deleteStudent = deleteStudent;
+    window.openAddStudentModal = openAddStudentModal;
+
     });
   </script>
 </body>
