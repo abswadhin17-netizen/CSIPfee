@@ -539,68 +539,371 @@
 
         <div>
           <label class="block text-xs font-semibold text-slate-500">Fee Status</label>
-          <select id="formFeeStatus" class="w-full px-3 py-1.5 border rounded-lg text-sm bg-white">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CSIPbyABS - Student & Fee Management</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0f5ff',
+              100: '#e0ebff',
+              500: '#4f46e5',
+              600: '#4338ca',
+              700: '#3730a3',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col">
+
+  <!-- ================= TOP NAVIGATION BAR ================= -->
+  <header id="topNavbar" class="bg-white border-b border-slate-200 sticky top-0 z-30">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        
+        <!-- Brand & Title -->
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-brand-600 text-white flex items-center justify-center font-bold text-base shadow-sm">
+            CS
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <span id="navInstituteName" class="font-bold text-slate-900 text-sm sm:text-base leading-tight">CSIPbyABS (Swadhin Sahu)</span>
+              <span id="roleBadge" class="text-[10px] px-2 py-0.5 rounded-full font-bold bg-slate-100 text-slate-600 border border-slate-200">Portal</span>
+            </div>
+            <p class="text-[11px] text-slate-500 hidden sm:block">Class 10, 11 & 12 Computer Science, IP & AI Management</p>
+          </div>
+        </div>
+
+        <!-- Navigation Tabs (Admin Only) -->
+        <nav id="adminTabNav" class="hidden md:flex items-center space-x-1">
+          <button onclick="switchAdminSection('dashboard')" id="tabDashBtn" class="px-3 py-2 rounded-lg text-xs font-semibold text-brand-600 bg-brand-50 transition">
+            Dashboard
+          </button>
+          <button onclick="switchAdminSection('students')" id="tabStudentsBtn" class="px-3 py-2 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition">
+            Students & Batches
+          </button>
+        </nav>
+
+        <!-- Right Side Controls -->
+        <div class="flex items-center gap-2">
+          <div id="adminVpaIndicator" class="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs border border-emerald-200">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span id="navVpaPreview" class="font-mono font-medium text-[11px]">9876543210@paytm</span>
+          </div>
+
+          <button id="adminSettingsBtn" onclick="openModal('settingsModal')" class="hidden p-2 text-slate-500 hover:text-slate-800 rounded-lg hover:bg-slate-100 transition">
+            <i data-lucide="settings" class="w-4 h-4"></i>
+          </button>
+
+          <button id="logoutBtn" onclick="logout()" class="hidden px-3 py-1.5 text-xs font-semibold text-rose-600 hover:bg-rose-50 border border-rose-200 rounded-lg transition">
+            Logout
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </header>
+
+
+  <!-- ================= AUTH / LOGIN SCREEN ================= -->
+  <main id="authScreen" class="flex-1 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-md p-6 sm:p-8">
+      
+      <div class="text-center mb-6">
+        <div class="w-12 h-12 bg-brand-600 text-white rounded-2xl flex items-center justify-center font-bold text-xl mx-auto mb-3 shadow-md">
+          CS
+        </div>
+        <h2 class="text-xl font-bold text-slate-900">CS / IP Portal Login</h2>
+        <p class="text-xs text-slate-500 mt-1">Select your portal type to continue</p>
+      </div>
+
+      <!-- Login Tabs -->
+      <div class="flex border-b border-slate-200 mb-6">
+        <button type="button" id="loginTabAdmin" onclick="toggleLoginTab('admin')" class="flex-1 py-2.5 text-xs font-bold text-brand-600 border-b-2 border-brand-600">
+          Admin Portal
+        </button>
+        <button type="button" id="loginTabStudent" onclick="toggleLoginTab('student')" class="flex-1 py-2.5 text-xs font-bold text-slate-400 border-b-2 border-transparent">
+          Student / Parent
+        </button>
+      </div>
+
+      <!-- Admin Login Form -->
+      <form id="adminLoginForm" onsubmit="event.preventDefault(); executeAdminLogin();" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Admin ID / Email</label>
+          <input type="text" id="adminEmail" required value="absadmin" placeholder="absadmin or admin@csipbyabs.com" class="w-full px-3.5 py-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Admin Password</label>
+          <input type="password" id="adminPassword" required value="CSIP@2026Password" placeholder="Enter password" class="w-full px-3.5 py-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
+        </div>
+        <button type="submit" class="w-full bg-brand-600 hover:bg-brand-700 text-white py-2.5 rounded-xl text-xs font-bold transition shadow-sm">
+          Login as Admin
+        </button>
+      </form>
+
+      <!-- Student Login Form -->
+      <form id="studentLoginForm" onsubmit="event.preventDefault(); executeStudentLogin();" class="space-y-4 hidden">
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Parent Registered Mobile Number</label>
+          <input type="tel" id="studentPhoneInput" placeholder="Enter 10-digit mobile number" class="w-full px-3.5 py-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
+        </div>
+        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl text-xs font-bold transition shadow-sm">
+          View Fee Portal
+        </button>
+      </form>
+
+      <div id="loginAlert" class="mt-4 p-3 rounded-xl bg-rose-50 text-rose-700 text-xs hidden border border-rose-200"></div>
+
+    </div>
+  </main>
+
+
+  <!-- ================= MAIN APP VIEW ================= -->
+  <div id="mainApp" class="flex-1 hidden">
+
+    <!-- 1. ADMIN DASHBOARD SECTION -->
+    <section id="adminDashboardSection" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+      
+      <!-- KPI Cards -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+          <div class="text-xs text-slate-500 font-semibold uppercase tracking-wider">Total Enrolled</div>
+          <div id="kpiTotalStudents" class="text-2xl font-bold text-slate-900 mt-2">0</div>
+          <div class="text-[11px] text-slate-400 mt-1">Class 10, 11 & 12 Batches</div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+          <div class="text-xs text-amber-600 font-semibold uppercase tracking-wider">Pending Dues</div>
+          <div id="kpiPendingAmount" class="text-2xl font-bold text-amber-600 mt-2">₹0</div>
+          <div id="kpiPendingCount" class="text-[11px] text-amber-500 mt-1">0 Students</div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+          <div class="text-xs text-emerald-600 font-semibold uppercase tracking-wider">Total Collected</div>
+          <div id="kpiCollectedAmount" class="text-2xl font-bold text-emerald-600 mt-2">₹0</div>
+          <div id="kpiPaidCount" class="text-[11px] text-emerald-500 mt-1">0 Cleared</div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+          <div class="text-xs text-rose-600 font-semibold uppercase tracking-wider">Overdue Payments</div>
+          <div id="kpiOverdueAmount" class="text-2xl font-bold text-rose-600 mt-2">₹0</div>
+          <div id="kpiOverdueCount" class="text-[11px] text-rose-500 mt-1">0 Overdue</div>
+        </div>
+      </div>
+
+      <!-- Quick Actions Bar -->
+      <div class="bg-white p-4 rounded-2xl border border-slate-200 flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h3 class="font-bold text-slate-900 text-sm">Quick Management</h3>
+          <p class="text-xs text-slate-500">Manage computer science student rosters and fee tracking</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="openAddStudentModal()" class="bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold px-4 py-2.5 rounded-xl transition flex items-center gap-2 shadow-sm">
+            <i data-lucide="plus" class="w-4 h-4"></i> Add CS / IP Student
+          </button>
+        </div>
+      </div>
+
+    </section>
+
+
+    <!-- 2. ADMIN STUDENTS & BATCHES SECTION -->
+    <section id="adminStudentsSection" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-4">
+      
+      <!-- Filter & Search Toolbar -->
+      <div class="bg-white p-4 rounded-2xl border border-slate-200 flex flex-col md:flex-row items-center justify-between gap-3 shadow-sm">
+        
+        <div class="w-full md:w-80 relative">
+          <input type="text" id="searchInput" placeholder="Search student name, roll no, or phone..." class="w-full pl-9 pr-3 py-2 border rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-brand-500" />
+          <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-2.5"></i>
+        </div>
+
+        <div class="w-full md:w-auto flex flex-wrap items-center gap-2">
+          <select id="classFilter" class="px-3 py-2 border rounded-xl text-xs bg-white focus:outline-none focus:ring-2 focus:ring-brand-500">
+            <option value="all">All Classes & Subjects</option>
+            <option value="Class 12 - Computer Science">Class 12 - CS</option>
+            <option value="Class 12 - Informatics Practices">Class 12 - IP</option>
+            <option value="Class 11 - Computer Science">Class 11 - CS</option>
+            <option value="Class 11 - Informatics Practices">Class 11 - IP</option>
+            <option value="Class 10 - Artificial Intelligence">Class 10 - AI</option>
+          </select>
+
+          <select id="statusFilter" class="px-3 py-2 border rounded-xl text-xs bg-white focus:outline-none focus:ring-2 focus:ring-brand-500">
+            <option value="all">All Status</option>
+            <option value="Pending">Pending</option>
+            <option value="Paid">Paid</option>
+            <option value="Overdue">Overdue</option>
+          </select>
+
+          <button onclick="openAddStudentModal()" class="bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold px-4 py-2 rounded-xl transition flex items-center gap-1.5 shadow-sm">
+            <i data-lucide="plus" class="w-4 h-4"></i> Add Student
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Students Table -->
+      <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead class="bg-slate-50 border-b border-slate-200 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+              <tr>
+                <th class="py-3 px-4">ROLL & NAME</th>
+                <th class="py-3 px-4">CLASS & SUBJECT</th>
+                <th class="py-3 px-4">PORTAL PASSWORD</th>
+                <th class="py-3 px-4">MONTHLY FEE</th>
+                <th class="py-3 px-4">DUE DATE</th>
+                <th class="py-3 px-4">STATUS</th>
+                <th class="py-3 px-4">PAYMENT</th>
+                <th class="py-3 px-4 text-right">ACTIONS</th>
+              </tr>
+            </thead>
+            <tbody id="studentsTableBody" class="divide-y divide-slate-100">
+              <!-- Rows rendered dynamically by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </section>
+
+
+    <!-- 3. STUDENT PORTAL SECTION -->
+    <section id="studentPortalSection" class="max-w-2xl mx-auto px-4 py-8 space-y-6 hidden">
+      <div id="studentPortalContent">
+        <!-- Rendered by JS -->
+      </div>
+    </section>
+
+  </div>
+
+
+  <!-- ================= MODALS ================= -->
+
+  <!-- ADD / EDIT STUDENT MODAL -->
+  <div id="addStudentModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 relative">
+      
+      <button type="button" onclick="closeModal('addStudentModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+
+      <h3 id="studentModalTitle" class="text-lg font-bold text-slate-900 mb-4">Add CS / IP Student</h3>
+
+      <form onsubmit="handleStudentSubmit(event)" class="space-y-4">
+        <!-- Hidden input for Edit ID -->
+        <input type="hidden" id="formStudentId" value="">
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Student Name</label>
+          <input type="text" id="formStudentName" required placeholder="e.g. Rahul Sharma" class="w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Parent Mobile Number (Login ID)</label>
+          <input type="tel" id="formParentPhone" required placeholder="10-digit mobile number" class="w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Batch / Class</label>
+          <select id="formBatch" class="w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+            <option value="Class 12 - Computer Science">Class 12 - Computer Science</option>
+            <option value="Class 12 - Informatics Practices">Class 12 - Informatics Practices</option>
+            <option value="Class 11 - Computer Science">Class 11 - Computer Science</option>
+            <option value="Class 11 - Informatics Practices">Class 11 - Informatics Practices</option>
+            <option value="Class 10 - Artificial Intelligence">Class 10 - Artificial Intelligence</option>
+          </select>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Monthly Fee (₹)</label>
+            <input type="number" id="formMonthlyFee" required value="2500" class="w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Due Date</label>
+            <input type="date" id="formDueDate" required class="w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Fee Status</label>
+          <select id="formFeeStatus" class="w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
             <option value="Pending">Pending</option>
             <option value="Paid">Paid</option>
             <option value="Overdue">Overdue</option>
           </select>
         </div>
 
-        <div class="flex gap-2 pt-2">
-          <button type="button" onclick="closeModal('addStudentModal')" class="flex-1 py-2 border rounded-xl text-xs">Cancel</button>
-          <button type="submit" class="flex-1 py-2 bg-brand-600 text-white rounded-xl text-xs font-semibold">Save Student</button>
+        <div class="flex justify-end gap-3 pt-2">
+          <button type="button" onclick="closeModal('addStudentModal')" class="px-4 py-2 border rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-50">Cancel</button>
+          <button type="submit" class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-semibold shadow-sm">Save Student</button>
         </div>
       </form>
+
     </div>
   </div>
 
-  <!-- Printable Receipt Modal -->
-  <div id="receiptModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden">
-    <div class="bg-white max-w-lg w-full rounded-2xl shadow-2xl overflow-hidden border">
-      <div class="no-print bg-slate-900 text-white px-5 py-3 flex justify-between items-center">
-        <h3 class="font-bold text-sm">Official Fee Receipt</h3>
-        <button onclick="closeModal('receiptModal')" class="text-slate-400 hover:text-white">&times;</button>
-      </div>
-      <div class="p-6">
-        <div id="printableReceipt" class="border p-5 rounded-xl text-xs space-y-3">
-          <div class="flex justify-between border-b pb-3">
-            <div>
-              <h2 id="receiptInstName" class="text-base font-bold text-brand-600">CSIPbyABS</h2>
-              <p id="receiptInstEmail" class="text-slate-500 text-[11px]">contact@csipbyabs.com</p>
-            </div>
-            <div class="text-right">
-              <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded font-bold text-[10px]">PAID</span>
-              <p id="receiptNo" class="font-mono mt-1 text-[11px]">REC-0001</p>
-            </div>
-          </div>
-          <div class="grid grid-cols-2 gap-2 bg-slate-50 p-2.5 rounded-lg">
-            <div>
-              <p class="text-slate-400 text-[10px] uppercase font-bold">Student</p>
-              <p id="receiptStudentName" class="font-bold text-sm">--</p>
-              <p id="receiptBatch" class="text-slate-600">--</p>
-            </div>
-            <div>
-              <p class="text-slate-400 text-[10px] uppercase font-bold">Parent Contact</p>
-              <p id="receiptParentPhone" class="font-mono">--</p>
-            </div>
-          </div>
-          <div class="border-t pt-2 flex justify-between font-bold text-sm">
-            <span>Total Paid Amount:</span>
-            <span id="receiptTotal" class="text-emerald-600">₹0</span>
-          </div>
-          <div class="border-t pt-2 text-[10px] text-slate-500">
-            <p>PhonePe / Beneficiary UPI: <span id="receiptPayeeVpa" class="font-mono font-medium"></span></p>
-          </div>
+
+  <!-- ADMIN SETTINGS & CREATE NEW ADMIN MODAL -->
+  <div id="settingsModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 relative max-h-[90vh] overflow-y-auto">
+      
+      <button type="button" onclick="closeModal('settingsModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+
+      <h3 class="text-lg font-bold text-slate-900 mb-4">Admin System Settings</h3>
+
+      <!-- UPI Config -->
+      <form onsubmit="event.preventDefault(); saveSettings();" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Merchant / Coaching Name</label>
+          <input type="text" id="settingMerchantName" class="w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">PhonePe / Paytm UPI ID</label>
+          <input type="text" id="settingUpiId" class="w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
+        </div>
+        <button type="submit" class="w-full bg-brand-600 hover:bg-brand-700 text-white py-2 rounded-xl text-xs font-bold transition">
+          Update System Settings
+        </button>
+      </form>
+
+      <!-- Create New Admin Account -->
+      <div class="border-t border-slate-200 pt-4 mt-6">
+        <h4 class="text-xs font-bold uppercase text-slate-700 mb-3">+ Create New Admin Login ID</h4>
+        <div class="space-y-3">
+          <input type="text" id="newAdminName" placeholder="Admin Name (e.g. Co-Teacher)" class="w-full px-3 py-2 border rounded-xl text-xs" />
+          <input type="text" id="newAdminUsername" placeholder="Login ID / Username (e.g. csteacher)" class="w-full px-3 py-2 border rounded-xl text-xs" />
+          <input type="email" id="newAdminEmail" placeholder="Admin Email (optional)" class="w-full px-3 py-2 border rounded-xl text-xs" />
+          <input type="password" id="newAdminPass" placeholder="Set Admin Password" class="w-full px-3 py-2 border rounded-xl text-xs" />
+          <button type="button" onclick="createNewAdminAccount()" class="w-full bg-slate-800 hover:bg-slate-900 text-white py-2 rounded-xl text-xs font-bold transition">
+            Create Admin Account
+          </button>
         </div>
       </div>
-      <div class="no-print bg-slate-50 px-5 py-3 border-t flex justify-between">
-        <button onclick="closeModal('receiptModal')" class="px-3 py-1.5 border rounded-lg text-xs">Close</button>
-        <button onclick="window.print()" class="px-4 py-1.5 bg-brand-600 text-white rounded-lg text-xs font-semibold">Print Receipt</button>
-      </div>
+
     </div>
   </div>
 
-  <!-- ==================== JAVASCRIPT CODE ==================== -->
+  <!-- ================= JAVASCRIPT LOGIC ================= -->
   <script>
     // Firebase Config
     const firebaseConfig = {
@@ -618,199 +921,186 @@
     } catch(e) { console.warn("Firebase Init:", e); }
     const db = firebase.database();
 
-    // Default System Settings with Admin Credentials
-    const defaultSettings = {
-      upiId: 'tutor@ybl',
-      merchantName: 'CSIPbyABS',
-      instituteEmail: 'contact@csipbyabs.com',
-      adminUsername: 'admin@csipbyabs.com',
-      adminPassword: 'admin123'
-    };
+    
+    // Storage Keys
+    const STORAGE_KEY_STUDENTS = 'csipbyabs_students_v3_fresh';
+    const STORAGE_KEY_SETTINGS = 'csipbyabs_settings_v3_fresh';
+    const STORAGE_KEY_ADMINS   = 'csipbyabs_admins_v1';
 
-    // Initial Students with their own individual passwords
-    const initialStudents = [
+    // Default 9 Initial Students Seed Data
+    const defaultStudents = [
+      { id: 'STU-101', name: 'Aarav Sharma', parentPhone: '9876543210', batch: 'Class 12 - Computer Science', monthlyFee: 2500, dueDate: '2026-10-05', status: 'Pending', paymentHistory: [] },
+      { id: 'STU-102', name: 'Priya Dash', parentPhone: '9876543211', batch: 'Class 12 - Informatics Practices', monthlyFee: 2500, dueDate: '2026-10-05', status: 'Paid', paymentHistory: [{ date: '2026-09-01', amount: 2500 }] },
+      { id: 'STU-103', name: 'Rohan Verma', parentPhone: '9876543212', batch: 'Class 11 - Computer Science', monthlyFee: 2200, dueDate: '2026-10-05', status: 'Pending', paymentHistory: [] },
+      { id: 'STU-104', name: 'Ananya Mohanty', parentPhone: '9876543213', batch: 'Class 12 - Computer Science', monthlyFee: 2500, dueDate: '2026-09-25', status: 'Overdue', paymentHistory: [] },
+      { id: 'STU-105', name: 'Ayush Kumar', parentPhone: '9876543214', batch: 'Class 10 - Artificial Intelligence', monthlyFee: 2000, dueDate: '2026-10-05', status: 'Paid', paymentHistory: [{ date: '2026-09-02', amount: 2000 }] },
+      { id: 'STU-106', name: 'Sanket Mishra', parentPhone: '9876543215', batch: 'Class 11 - Informatics Practices', monthlyFee: 2200, dueDate: '2026-10-05', status: 'Pending', paymentHistory: [] },
+      { id: 'STU-107', name: 'Shreya Tripathy', parentPhone: '9876543216', batch: 'Class 12 - Computer Science', monthlyFee: 2500, dueDate: '2026-10-05', status: 'Paid', paymentHistory: [{ date: '2026-09-03', amount: 2500 }] },
+      { id: 'STU-108', name: 'Aditya Sahoo', parentPhone: '9876543217', batch: 'Class 11 - Computer Science', monthlyFee: 2200, dueDate: '2026-09-28', status: 'Overdue', paymentHistory: [] },
+      { id: 'STU-109', name: 'Sneha Patnaik', parentPhone: '9876543218', batch: 'Class 10 - Artificial Intelligence', monthlyFee: 2000, dueDate: '2026-10-05', status: 'Pending', paymentHistory: [] }
+    ];
+
+    // Default Admins Seed Data
+    const defaultAdmins = [
       {
-        id: 'STU-101',
-        name: 'Aarav Sharma',
-        parentPhone: '9876543210',
-        password: 'stu123',
-        batch: 'Class 12 - Computer Science',
-        monthlyFee: 2500,
-        dueDate: '2026-10-10',
-        status: 'Pending',
-        paymentHistory: []
-      },
-      {
-        id: 'STU-102',
-        name: 'Priya Patel',
-        parentPhone: '9823456781',
-        password: 'stu123',
-        batch: 'Class 12 - Informatics Practices',
-        monthlyFee: 2500,
-        dueDate: '2026-09-15',
-        status: 'Overdue',
-        paymentHistory: []
-      },
-      {
-        id: 'STU-103',
-        name: 'Rohan Gupta',
-        parentPhone: '9123456789',
-        password: 'stu123',
-        batch: 'Class 11 - Computer Science',
-        monthlyFee: 2200,
-        dueDate: '2026-09-05',
-        status: 'Paid',
-        paymentHistory: [{ receiptNo: 'REC-2026-0082', date: '2026-09-04', amount: 2200, refId: 'UPI/263819283719' }]
+        id: 'ADM-01',
+        name: 'Swadhin Sahu (Principal)',
+        username: 'absadmin',
+        email: 'admin@csipbyabs.com',
+        password: 'CSIP@2026Password'
       }
     ];
 
-    let appSettings = defaultSettings;
-    let students = initialStudents;
-    let currentRole = null;
+    // Default Settings
+    const defaultSettings = {
+      merchantName: 'CSIPbyABS (Swadhin Sahu)',
+      upiId: '9876543210@paytm'
+    };
+
+    // Application State
+    let students = loadStorageData(STORAGE_KEY_STUDENTS, defaultStudents);
+    let adminUsers = loadStorageData(STORAGE_KEY_ADMINS, defaultAdmins);
+    let appSettings = loadStorageData(STORAGE_KEY_SETTINGS, defaultSettings);
+
+    let currentRole = null; // 'admin' or 'student'
+    let currentActiveAdmin = null;
     let currentActiveStudent = null;
-    let currentPayingStudent = null;
-    let chartInstance = null;
 
-    // --- REALTIME DATABASE LISTENERS ---
-    db.ref('csip_students').on('value', (snapshot) => {
-      const data = snapshot.val();
-      if (data && Array.isArray(data)) {
-        students = data;
-      } else if (!data) {
-        db.ref('csip_students').set(initialStudents);
+    // Helper functions for LocalStorage
+    function loadStorageData(key, fallback) {
+      const data = localStorage.getItem(key);
+      try {
+        return data ? JSON.parse(data) : fallback;
+      } catch (e) {
+        return fallback;
       }
-      
-      if (currentRole === 'admin') {
-        renderStudentsTable();
-        updateDashboardKPIs();
-      } else if (currentRole === 'student' && currentActiveStudent) {
-        currentActiveStudent = students.find(s => s.id === currentActiveStudent.id) || currentActiveStudent;
-        renderStudentPortal();
-      }
-    });
-
-    db.ref('csip_settings').on('value', (snapshot) => {
-      const data = snapshot.val();
-      if (data) {
-        appSettings = { ...defaultSettings, ...data };
-        document.getElementById('navInstituteName').textContent = appSettings.merchantName;
-        document.getElementById('navVpaPreview').textContent = appSettings.upiId;
-        document.getElementById('dashMerchantName').textContent = appSettings.merchantName;
-        document.getElementById('dashVpa').textContent = appSettings.upiId;
-      } else {
-        db.ref('csip_settings').set(defaultSettings);
-      }
-    });
+    }
 
     function persistData() {
-      db.ref('csip_students').set(students);
-      db.ref('csip_settings').set(appSettings);
+      localStorage.setItem(STORAGE_KEY_STUDENTS, JSON.stringify(students));
+      localStorage.setItem(STORAGE_KEY_ADMINS, JSON.stringify(adminUsers));
+      localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(appSettings));
     }
 
-    // --- SEPARATE AUTHENTICATION LOGIC ---
+    // Modal Handlers
+    function openModal(id) {
+      document.getElementById(id)?.classList.remove('hidden');
+    }
+    function closeModal(id) {
+      document.getElementById(id)?.classList.add('hidden');
+    }
 
-    function switchLoginTab(role) {
-      const tabAdmin = document.getElementById('tabAdmin');
-      const tabStudent = document.getElementById('tabStudent');
+    // Toggle Login Screen Tabs
+    function toggleLoginTab(tab) {
       const adminForm = document.getElementById('adminLoginForm');
       const studentForm = document.getElementById('studentLoginForm');
-      document.getElementById('loginAlertBox').classList.add('hidden');
+      const tabAdmin = document.getElementById('loginTabAdmin');
+      const tabStudent = document.getElementById('loginTabStudent');
 
-      if (role === 'admin') {
-        tabAdmin.className = 'flex-1 py-3.5 border-b-2 border-brand-600 text-brand-600 font-bold flex items-center justify-center gap-1.5';
-        tabStudent.className = 'flex-1 py-3.5 text-slate-500 hover:text-slate-700 flex items-center justify-center gap-1.5';
+      if (tab === 'admin') {
         adminForm.classList.remove('hidden');
         studentForm.classList.add('hidden');
+        tabAdmin.className = "flex-1 py-2.5 text-xs font-bold text-brand-600 border-b-2 border-brand-600";
+        tabStudent.className = "flex-1 py-2.5 text-xs font-bold text-slate-400 border-b-2 border-transparent";
       } else {
-        tabStudent.className = 'flex-1 py-3.5 border-b-2 border-brand-600 text-brand-600 font-bold flex items-center justify-center gap-1.5';
-        tabAdmin.className = 'flex-1 py-3.5 text-slate-500 hover:text-slate-700 flex items-center justify-center gap-1.5';
         studentForm.classList.remove('hidden');
         adminForm.classList.add('hidden');
-      }
-      safeRenderIcons();
-    }
-
-    // 1. Admin Login Handler
-    function executeAdminLogin(e) {
-      if (e) e.preventDefault();
-      const enteredId = document.getElementById('adminUsernameInput').value.trim();
-      const enteredPass = document.getElementById('adminPasswordInput').value.trim();
-
-      const validUser = (enteredId === appSettings.adminUsername || enteredId === 'admin');
-      const validPass = (enteredPass === appSettings.adminPassword);
-
-      if (validUser && validPass) {
-        currentRole = 'admin';
-        sessionStorage.setItem('csip_auth_role', 'admin');
-        launchApp();
-        showToast('Logged in as Administrator');
-      } else {
-        showLoginAlert('Invalid Admin ID or Password. Default: admin / admin123');
+        tabStudent.className = "flex-1 py-2.5 text-xs font-bold text-brand-600 border-b-2 border-brand-600";
+        tabAdmin.className = "flex-1 py-2.5 text-xs font-bold text-slate-400 border-b-2 border-transparent";
       }
     }
 
-    // 2. Student Login Handler (by Roll ID OR Parent Phone)
-    function executeStudentLogin(e) {
-      if (e) e.preventDefault();
-      const enteredId = document.getElementById('studentIdentifierInput').value.trim().toLowerCase();
-      const enteredPass = document.getElementById('studentPasswordInput').value.trim();
+    // ================= AUTHENTICATION =================
+    function executeAdminLogin() {
+      const inputId = document.getElementById('adminEmail').value.trim().toLowerCase();
+      const inputPass = document.getElementById('adminPassword').value.trim();
 
-      const matchedStudent = students.find(s => 
-        (s.id.toLowerCase() === enteredId || s.parentPhone === enteredId || s.parentPhone.slice(-10) === enteredId)
+      const matchingAdmin = adminUsers.find(a => 
+        (a.email.toLowerCase() === inputId || a.username.toLowerCase() === inputId) && 
+        a.password === inputPass
       );
 
-      if (!matchedStudent) {
-        showLoginAlert('No student found with that Roll ID or Mobile number.');
-        return;
-      }
-
-      // Check student password
-      if (matchedStudent.password && matchedStudent.password === enteredPass) {
-        currentRole = 'student';
-        currentActiveStudent = matchedStudent;
-        sessionStorage.setItem('csip_auth_role', 'student');
-        sessionStorage.setItem('csip_auth_student_id', matchedStudent.id);
+      if (matchingAdmin) {
+        currentRole = 'admin';
+        currentActiveAdmin = matchingAdmin;
+        hideLoginAlert();
         launchApp();
-        showToast(`Welcome, ${matchedStudent.name}`);
       } else {
-        showLoginAlert('Incorrect password! Default demo password is "stu123".');
+        showLoginAlert('Invalid Admin ID/Email or Password!');
       }
     }
 
-    function fillDemoStudent(roll, pass) {
-      document.getElementById('studentIdentifierInput').value = roll;
-      document.getElementById('studentPasswordInput').value = pass;
-    }
+    function executeStudentLogin() {
+      const phone = document.getElementById('studentPhoneInput').value.trim();
+      const match = students.find(s => s.parentPhone === phone);
 
-    function togglePasswordVisibility(inputId) {
-      const input = document.getElementById(inputId);
-      if (input.type === 'password') {
-        input.type = 'text';
+      if (match) {
+        currentRole = 'student';
+        currentActiveStudent = match;
+        hideLoginAlert();
+        launchApp();
       } else {
-        input.type = 'password';
+        showLoginAlert('No student found registered with this Mobile Number.');
       }
     }
 
-    // Session-checked Launch
+    function showLoginAlert(msg) {
+      const box = document.getElementById('loginAlert');
+      box.textContent = msg;
+      box.classList.remove('hidden');
+    }
+    function hideLoginAlert() {
+      document.getElementById('loginAlert').classList.add('hidden');
+    }
+
+    function logout() {
+      currentRole = null;
+      currentActiveAdmin = null;
+      currentActiveStudent = null;
+
+      document.getElementById('mainApp').classList.add('hidden');
+      document.getElementById('authScreen').classList.remove('hidden');
+      document.getElementById('logoutBtn').classList.add('hidden');
+    }
+
+    // ================= LAUNCH APP & ROLE ISOLATION =================
     function launchApp() {
       document.getElementById('authScreen').classList.add('hidden');
       document.getElementById('mainApp').classList.remove('hidden');
+      document.getElementById('logoutBtn').classList.remove('hidden');
+
+      // Populate Navbar brand & settings settings
+      document.getElementById('navInstituteName').textContent = appSettings.merchantName;
+      document.getElementById('navVpaPreview').textContent = appSettings.upiId;
+      document.getElementById('settingMerchantName').value = appSettings.merchantName;
+      document.getElementById('settingUpiId').value = appSettings.upiId;
 
       if (currentRole === 'admin') {
-        document.getElementById('roleBadge').textContent = 'Admin Mode';
+        // Strict Admin UI Visibility
+        document.getElementById('roleBadge').textContent = `Admin (${currentActiveAdmin.name})`;
+        document.getElementById('roleBadge').className = "text-[10px] px-2 py-0.5 rounded-full font-bold bg-purple-100 text-purple-800 border border-purple-200";
+
         document.getElementById('adminVpaIndicator').classList.remove('hidden');
         document.getElementById('adminSettingsBtn').classList.remove('hidden');
         document.getElementById('adminTabNav').classList.remove('hidden');
+
         document.getElementById('studentPortalSection').classList.add('hidden');
+
         switchAdminSection('dashboard');
         renderStudentsTable();
-      } else {
+        updateDashboardKPIs();
+      } 
+      else if (currentRole === 'student') {
+        // Strict Student UI Visibility
         document.getElementById('roleBadge').textContent = 'Student Portal';
+        document.getElementById('roleBadge').className = "text-[10px] px-2 py-0.5 rounded-full font-bold bg-blue-100 text-blue-800 border border-blue-200";
+
         document.getElementById('adminVpaIndicator').classList.add('hidden');
         document.getElementById('adminSettingsBtn').classList.add('hidden');
         document.getElementById('adminTabNav').classList.add('hidden');
         document.getElementById('adminDashboardSection').classList.add('hidden');
         document.getElementById('adminStudentsSection').classList.add('hidden');
+
         document.getElementById('studentPortalSection').classList.remove('hidden');
         renderStudentPortal();
       }
@@ -818,43 +1108,39 @@
       safeRenderIcons();
     }
 
-    function logout() {
-      currentRole = null;
-      currentActiveStudent = null;
-      sessionStorage.removeItem('csip_auth_role');
-      sessionStorage.removeItem('csip_auth_student_id');
-      document.getElementById('mainApp').classList.add('hidden');
-      document.getElementById('authScreen').classList.remove('hidden');
-      document.getElementById('loginAlertBox').classList.add('hidden');
-      showToast('Logged out successfully');
-    }
+    // Navigation Tabs
+    function switchAdminSection(sectionId) {
+      const dashSection = document.getElementById('adminDashboardSection');
+      const studentsSection = document.getElementById('adminStudentsSection');
+      const tabDashBtn = document.getElementById('tabDashBtn');
+      const tabStudentsBtn = document.getElementById('tabStudentsBtn');
 
-    // Check existing session on reload
-    function checkSession() {
-      const role = sessionStorage.getItem('csip_auth_role');
-      if (role === 'admin') {
-        currentRole = 'admin';
-        launchApp();
-      } else if (role === 'student') {
-        const stuId = sessionStorage.getItem('csip_auth_student_id');
-        const st = students.find(s => s.id === stuId);
-        if (st) {
-          currentRole = 'student';
-          currentActiveStudent = st;
-          launchApp();
-        }
+      if (sectionId === 'dashboard') {
+        dashSection.classList.remove('hidden');
+        studentsSection.classList.add('hidden');
+        tabDashBtn.className = "px-3 py-2 rounded-lg text-xs font-semibold text-brand-600 bg-brand-50 transition";
+        tabStudentsBtn.className = "px-3 py-2 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition";
+        updateDashboardKPIs();
+      } else {
+        dashSection.classList.add('hidden');
+        studentsSection.classList.remove('hidden');
+        tabStudentsBtn.className = "px-3 py-2 rounded-lg text-xs font-semibold text-brand-600 bg-brand-50 transition";
+        tabDashBtn.className = "px-3 py-2 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition";
+        
+        // Re-render table on tab open
+        renderStudentsTable();
       }
     }
 
-    // --- STUDENT MANAGEMENT & PASSWORDS ---
-
+        // ================= STUDENT CRUD OPERATIONS =================
     function openAddStudentModal() {
       document.getElementById('studentModalTitle').textContent = 'Add CS / IP Student';
       document.getElementById('formStudentId').value = '';
       document.getElementById('formStudentName').value = '';
       document.getElementById('formParentPhone').value = '';
-      document.getElementById('formStudentPassword').value = 'stu123'; // Default generated password
+      document.getElementById('formBatch').value = 'Class 12 - Computer Science';
       document.getElementById('formMonthlyFee').value = '2500';
+      document.getElementById('formDueDate').value = new Date().toISOString().split('T')[0];
       document.getElementById('formFeeStatus').value = 'Pending';
       openModal('addStudentModal');
     }
@@ -862,393 +1148,356 @@
     function editStudent(id) {
       const st = students.find(s => s.id === id);
       if (!st) return;
-      document.getElementById('studentModalTitle').textContent = 'Edit Student & Password';
+
+      document.getElementById('studentModalTitle').textContent = 'Edit Student Details';
       document.getElementById('formStudentId').value = st.id;
       document.getElementById('formStudentName').value = st.name;
       document.getElementById('formParentPhone').value = st.parentPhone;
-      document.getElementById('formStudentPassword').value = st.password || 'stu123';
       document.getElementById('formBatch').value = st.batch;
       document.getElementById('formMonthlyFee').value = st.monthlyFee;
       document.getElementById('formDueDate').value = st.dueDate;
       document.getElementById('formFeeStatus').value = st.status;
+
       openModal('addStudentModal');
     }
 
     function handleStudentSubmit(e) {
-      e.preventDefault();
-      const id = document.getElementById('formStudentId').value;
-      const name = document.getElementById('formStudentName').value.trim();
-      const parentPhone = document.getElementById('formParentPhone').value.trim();
-      const password = document.getElementById('formStudentPassword').value.trim() || 'stu123';
-      const batch = document.getElementById('formBatch').value;
-      const monthlyFee = Number(document.getElementById('formMonthlyFee').value);
-      const dueDate = document.getElementById('formDueDate').value;
-      const status = document.getElementById('formFeeStatus').value;
-
-      if (id) {
-        const st = students.find(s => s.id === id);
-        if (st) {
-          st.name = name;
-          st.parentPhone = parentPhone;
-          st.password = password;
-          st.batch = batch;
-          st.monthlyFee = monthlyFee;
-          st.dueDate = dueDate;
-          st.status = status;
-          showToast('Student updated!');
-        }
-      } else {
-        const newSt = {
-          id: 'STU-' + Math.floor(100 + Math.random() * 900),
-          name,
-          parentPhone,
-          password,
-          batch,
-          monthlyFee,
-          dueDate,
-          status,
-          paymentHistory: []
-        };
-        students.unshift(newSt);
-        showToast(`Student enrolled! Roll No: ${newSt.id}`);
+    // FIREBASE LISTENER (Syncs data across all devices automatically)
+      function listenToStudentsFromFirebase() {
+        db.collection('students').onSnapshot((snapshot) => {
+          students = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          }));
+          renderStudentsTable();
+          updateDashboardKPIs();
+        }, (error) => {
+          console.error("Error fetching students from Firebase: ", error);
+        });
       }
+      // SAVE / UPDATE TO FIREBASE
+      async function handleStudentSubmit(e) {
+        e.preventDefault();
+
+        const studentId = document.getElementById('formStudentId').value;
+        const studentData = {
+          name: document.getElementById('formStudentName').value.trim(),
+          parentPhone: document.getElementById('formParentPhone').value.trim(),
+          batch: document.getElementById('formBatch').value,
+          monthlyFee: Number(document.getElementById('formMonthlyFee').value),
+          dueDate: document.getElementById('formDueDate').value,
+          status: document.getElementById('formFeeStatus').value
+        };
+        try {
+          if (studentId) {
+            await db.collection('students').doc(studentId).update(studentData);
+          } else {
+            const newDocRef = db.collection('students').doc('STU-' + Math.floor(100 + Math.random() * 900));
+            await newDocRef.set({
+              ...studentData,
+              paymentHistory: []
+            });
+          }
+          closeModal('addStudentModal');
+        } catch (err) {
+          alert("Firebase Save Error: " + err.message);
+        }
+      }
+      // DELETE FROM FIREBASE
+      async function deleteStudent(id) {
+        const st = students.find(s => s.id === id);
+        if (!st) return;
+        if (confirm(`Are you sure you want to delete ${st.name} from Firebase?`)) {
+          try {
+            await db.collection('students').doc(id).delete();
+          } catch (err) {
+            alert("Firebase Delete Error: " + err.message);
+          }
+        }
+      }
+      // MARK AS PAID IN FIREBASE
+      async function markAsPaid(id) {
+        try {
+          await db.collection('students').doc(id).update({
+            status: 'Paid'
+          });
+        } catch (err) {
+          alert("Firebase Payment Update Error: " + err.message);
+        }
+      }
+    }
+
+    function deleteStudent(id) {
+      const st = students.find(s => s.id === id);
+      if (!st) return;
+
+      if (confirm(`Are you sure you want to delete ${st.name} (${st.batch})?`)) {
+        students = students.filter(s => s.id !== id);
+        persistData();
+        renderStudentsTable();
+        updateDashboardKPIs();
+      }
+    }
+
+    function markAsPaid(id) {
+      const st = students.find(s => s.id === id);
+      if (!st) return;
+
+      st.status = 'Paid';
+      if (!st.paymentHistory) st.paymentHistory = [];
+      st.paymentHistory.push({
+        date: new Date().toISOString().split('T')[0],
+        amount: st.monthlyFee
+      });
 
       persistData();
-      closeModal('addStudentModal');
       renderStudentsTable();
       updateDashboardKPIs();
     }
 
-    function renderStudentsTable() {
-      const tbody = document.getElementById('studentTableBody');
-      const search = (document.getElementById('searchInput').value || '').toLowerCase().trim();
-      const batch = document.getElementById('batchFilter').value;
-      const status = document.getElementById('statusFilter').value;
-
-      const filtered = students.filter(s => {
-        const matchesSearch = s.name.toLowerCase().includes(search) || 
-                              s.parentPhone.includes(search) || 
-                              s.id.toLowerCase().includes(search);
-        const matchesBatch = batch === 'ALL' || s.batch === batch;
-        const matchesStatus = status === 'ALL' || s.status === status;
-        return matchesSearch && matchesBatch && matchesStatus;
-      });
-
-      tbody.innerHTML = '';
-      filtered.forEach(st => {
-        const tr = document.createElement('tr');
-        tr.className = 'hover:bg-slate-50 transition-colors border-b';
-
-        let badge = '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">Pending</span>';
-        if (st.status === 'Paid') badge = '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">Paid</span>';
-        if (st.status === 'Overdue') badge = '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-rose-100 text-rose-800">Overdue</span>';
-
-        tr.innerHTML = `
-          <td class="py-3 px-4 sm:px-6">
-            <div class="font-bold text-slate-800">${st.name}</div>
-            <div class="text-xs text-slate-400 font-mono">Roll: <span class="text-brand-600 font-semibold">${st.id}</span> &bull; +91 ${st.parentPhone}</div>
-          </td>
-          <td class="py-3 px-4 text-xs font-medium text-brand-700">${st.batch}</td>
-          <td class="py-3 px-4 text-xs font-mono text-slate-600 bg-slate-50/50">
-            <span class="px-2 py-0.5 rounded bg-slate-200/60 font-semibold">${st.password || 'stu123'}</span>
-          </td>
-          <td class="py-3 px-4 font-bold">₹${Number(st.monthlyFee).toLocaleString('en-IN')}</td>
-          <td class="py-3 px-4 text-xs">${st.dueDate}</td>
-          <td class="py-3 px-4">${badge}</td>
-          <td class="py-3 px-4 text-center">
-            ${st.status === 'Paid' ? 
-              `<button onclick="viewReceipt('${st.id}')" class="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-xs font-semibold rounded-lg">Receipt</button>` :
-              `<button onclick="openUpiModal('${st.id}')" class="px-3 py-1 bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold rounded-lg shadow-xs">Pay Fee</button>`
-            }
-          </td>
-          <td class="py-3 px-4 text-right">
-            <div class="flex items-center justify-end gap-1">
-              <button type="button" onclick="editStudent('${st.id}')" title="Edit Student & Password" class="text-brand-600 hover:bg-brand-50 p-1 rounded">
-                <i data-lucide="edit-2" class="w-4 h-4"></i>
-              </button>
-              <button type="button" onclick="deleteStudent('${st.id}')" title="Delete Student" class="text-rose-500 hover:bg-rose-50 p-1 rounded">
-                <i data-lucide="trash-2" class="w-4 h-4"></i>
-              </button>
-            </div>
-          </td>
-        `;
-        tbody.appendChild(tr);
-      });
-      safeRenderIcons();
-    }
-
-    // --- STUDENT VIEW ---
-    function renderStudentPortal() {
-      const st = currentActiveStudent;
-      if (!st) return;
-
-      document.getElementById('spStudentName').textContent = `Welcome, ${st.name}`;
-      document.getElementById('spStudentBatch').textContent = st.batch;
-      document.getElementById('spStudentRoll').textContent = st.id;
-      document.getElementById('spFeeAmount').textContent = '₹' + Number(st.monthlyFee).toLocaleString('en-IN');
-      document.getElementById('spDueDate').textContent = st.dueDate;
-
-      const badge = document.getElementById('spStatusBadge');
-      const actionArea = document.getElementById('spActionBtnArea');
-      badge.textContent = st.status;
-
-      if (st.status === 'Paid') {
-        badge.className = 'px-2.5 py-1 text-xs font-bold rounded-full bg-emerald-100 text-emerald-800';
-        actionArea.innerHTML = `<button onclick="viewReceipt('${st.id}')" class="w-full bg-slate-900 text-white font-semibold py-2 rounded-xl text-xs">View Receipt</button>`;
-      } else {
-        badge.className = 'px-2.5 py-1 text-xs font-bold rounded-full bg-amber-100 text-amber-800';
-        actionArea.innerHTML = `<button onclick="openUpiModal('${st.id}')" class="w-full bg-brand-600 text-white font-semibold py-2 rounded-xl text-xs">Pay via PhonePe / UPI</button>`;
-      }
-
-      const payload = buildUpiPayload(st);
-      document.getElementById('spDynamicQrImage').src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(payload)}`;
-      document.getElementById('spUpiDeepLink').href = payload;
-
-      safeRenderIcons();
-    }
-
-    // --- SETTINGS (UPI & ADMIN PASSWORD) ---
-    function saveSettings(e) {
-      e.preventDefault();
-      appSettings.upiId = document.getElementById('settingUpiId').value.trim();
-      appSettings.merchantName = document.getElementById('settingMerchantName').value.trim();
-      appSettings.adminUsername = document.getElementById('settingAdminUsername').value.trim();
-      appSettings.adminPassword = document.getElementById('settingAdminPassword').value.trim();
-
-      persistData();
-      closeModal('settingsModal');
-      showToast('Settings & Admin Password saved!');
-    }
-
-    // Helpers
-    function buildUpiPayload(student) {
-      const pa = encodeURIComponent(appSettings.upiId);
-      const pn = encodeURIComponent(appSettings.merchantName);
-      const am = encodeURIComponent(student.monthlyFee);
-      const tn = encodeURIComponent(`CSIP Tuition Fee - ${student.name}`);
-      return `upi://pay?pa=${pa}&pn=${pn}&am=${am}&tn=${tn}&cu=INR`;
-    }
-
-    function openUpiModal(id) {
-      const student = students.find(s => s.id === id);
-      if (!student) return;
-      currentPayingStudent = student;
-
-      const payload = buildUpiPayload(student);
-      document.getElementById('modalStudentName').textContent = student.name;
-      document.getElementById('modalStudentBatch').textContent = student.batch;
-      document.getElementById('modalStudentAmount').textContent = '₹' + Number(student.monthlyFee).toLocaleString('en-IN');
-      document.getElementById('modalQrImage').src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(payload)}`;
-      document.getElementById('modalDeepLinkBtn').href = payload;
-
-      openModal('upiPayModal');
-    }
-
-    function confirmPaymentFromModal() {
-      if (!currentPayingStudent) return;
-      currentPayingStudent.status = 'Paid';
-      persistData();
-      closeModal('upiPayModal');
-      showToast(`Payment marked as Paid for ${currentPayingStudent.name}!`);
-    }
-
-    // 1. FAIL-SAFE DELETE FUNCTION
-    function deleteStudent(id) {
-  // Ensure 'students' exists
-      if (!Array.isArray(students)) return;
-      const st = students.find(s => s.id === id);
-      if (!st) {
-        alert('Student record not found!');
-        return;
-      }
-      if (confirm(`Are you sure you want to delete ${st.name}?`)) {
-    // Remove student from array
-        students = students.filter(s => s.id !== id);
-        
-    // Persist to LocalStorage
-        localStorage.setItem(STORAGE_KEY_STUDENTS, JSON.stringify(students));
-
-    // Re-render table
-        renderStudentsTable();
-
-    // Call optional UI helpers safely
-        if (typeof updateDashboardKPIs === 'function') updateDashboardKPIs();
-        if (typeof showToast === 'function') showToast(`Deleted ${st.name}`);
-      }
-    }
-
-// 2. FAIL-SAFE TABLE RENDERER
+    // ================= TABLE RENDERER (ALL 8 COLUMNS) =================
     function renderStudentsTable() {
       const tbody = document.getElementById('studentsTableBody');
-      if (!tbody) {
-        console.error('Table body element "#studentsTableBody" was not found in HTML!');
-        return;
-      }
-      if (!students || students.length === 0) {
+      if (!tbody) return;
+
+      // Ensure data is active
+      if (!students) students = [];
+
+      // Read filter inputs safely
+      const searchVal = document.getElementById('searchInput')?.value.trim().toLowerCase() || '';
+      const classVal = document.getElementById('classFilter')?.value || 'all';
+      const statusVal = document.getElementById('statusFilter')?.value || 'all';
+
+      // Filter logic
+      const filtered = students.filter(st => {
+        const matchesSearch = !searchVal || 
+          (st.name && st.name.toLowerCase().includes(searchVal)) ||
+          (st.id && st.id.toLowerCase().includes(searchVal)) ||
+          (st.parentPhone && st.parentPhone.includes(searchVal));
+
+        const matchesClass = classVal === 'all' || st.batch === classVal;
+        const matchesStatus = statusVal === 'all' || st.status === statusVal;
+
+        return matchesSearch && matchesClass && matchesStatus;
+      });
+
+      if (filtered.length === 0) {
         tbody.innerHTML = `
-        <tr>
-        <td colspan="8" class="text-center py-6 text-slate-400 text-xs">
-        No students found. Click "+ Add Student" to create one.
-        </td>
-        </tr>`;
+          <tr>
+            <td colspan="8" class="text-center py-8 text-slate-400 text-xs">
+              No students found matching your filter criteria.
+            </td>
+          </tr>`;
         return;
       }
-      tbody.innerHTML = students.map(st => `
-       <tr class="border-b border-slate-100 hover:bg-slate-50/50 text-xs text-slate-700">
-         <td class="py-3 px-4 font-mono text-slate-500">${st.id}</td>
-         <td class="py-3 px-4 font-semibold text-slate-900">${st.name}</td>
-         <td class="py-3 px-4">${st.parentPhone}</td>
-         <td class="py-3 px-4"><span class="px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 font-medium">${st.batch}</span></td>
-         <td class="py-3 px-4 font-semibold">₹${st.monthlyFee}</td>
-         <td class="py-3 px-4 text-slate-500">${st.dueDate}</td>
-         <td class="py-3 px-4">
-          <span class="px-2 py-0.5 rounded-full text-xs font-semibold ${
-            st.status === 'Paid' ? 'bg-emerald-100 text-emerald-700' :
-            st.status === 'Overdue' ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700'
-          }">${st.status}</span>
-        </td>
-        <td class="py-3 px-4 text-right space-x-1">
-          <button type="button" onclick="editStudent('${st.id}')" class="text-brand-600 hover:text-brand-800 font-semibold px-2 py-1 rounded transition"
-             Edit
-          </button>
-          <button type="button" onclick="deleteStudent('${st.id}')" class="text-rose-500 hover:text-rose-700 font-semibold px-2 py-1 rounded transition">
-             Delete
-          </button>
-        </td>
-      </tr>
-    `).join('');
-    }
 
-// 3. EXPOSE TO GLOBAL SCOPE
-    window.deleteStudent = deleteStudent;
-    window.editStudent = editStudent;
-    window.renderStudentsTable = renderStudentsTable;
+      // Render 8 Columns exactly matching screenshot
+      tbody.innerHTML = filtered.map(st => `
+        <tr class="hover:bg-slate-50/80 text-xs text-slate-700 transition">
+          
+          <!-- 1. ROLL & NAME -->
+          <td class="py-3 px-4">
+            <div class="font-bold text-slate-900 text-sm">${st.name}</div>
+            <div class="text-[10px] font-mono text-slate-400">${st.id}</div>
+          </td>
 
+          <!-- 2. CLASS & SUBJECT -->
+          <td class="py-3 px-4">
+            <span class="px-2.5 py-1 rounded-md bg-slate-100 text-slate-700 font-medium text-[11px]">${st.batch}</span>
+          </td>
 
-    function copyCurrentStudentUpiLink() {
-      if (!currentActiveStudent) return;
-      const payload = buildUpiPayload(currentActiveStudent);
-      navigator.clipboard.writeText(payload).then(() => showToast('Payment link copied!'));
-    }
+          <!-- 3. PORTAL PASSWORD -->
+          <td class="py-3 px-4 font-mono text-slate-600">${st.parentPhone}</td>
 
-    function viewReceipt(id) {
-      const st = students.find(s => s.id === id);
-      if (!st) return;
-      document.getElementById('receiptInstName').textContent = appSettings.merchantName;
-      document.getElementById('receiptStudentName').textContent = st.name;
-      document.getElementById('receiptBatch').textContent = st.batch;
-      document.getElementById('receiptParentPhone').textContent = '+91 ' + st.parentPhone;
-      document.getElementById('receiptTotal').textContent = '₹' + Number(st.monthlyFee).toLocaleString('en-IN');
-      document.getElementById('receiptPayeeVpa').textContent = appSettings.upiId;
-      openModal('receiptModal');
-    }
+          <!-- 4. MONTHLY FEE -->
+          <td class="py-3 px-4 font-bold text-slate-900">₹${st.monthlyFee}</td>
 
-    function switchAdminSection(section) {
-      const tabDash = document.getElementById('subtab-dashboard');
-      const tabStud = document.getElementById('subtab-students');
-      const dashSec = document.getElementById('adminDashboardSection');
-      const studSec = document.getElementById('adminStudentsSection');
+          <!-- 5. DUE DATE -->
+          <td class="py-3 px-4 text-slate-500">${st.dueDate}</td>
 
-      if (section === 'dashboard') {
-        tabDash.className = 'py-3 px-1 border-b-2 border-brand-600 text-brand-600 font-semibold text-sm flex items-center gap-2';
-        tabStud.className = 'py-3 px-1 border-b-2 border-transparent text-slate-500 hover:text-slate-700 font-semibold text-sm flex items-center gap-2';
-        dashSec.classList.remove('hidden');
-        studSec.classList.add('hidden');
-        updateDashboardKPIs();
-      } else {
-        tabStud.className = 'py-3 px-1 border-b-2 border-brand-600 text-brand-600 font-semibold text-sm flex items-center gap-2';
-        tabDash.className = 'py-3 px-1 border-b-2 border-transparent text-slate-500 hover:text-slate-700 font-semibold text-sm flex items-center gap-2';
-        studSec.classList.remove('hidden');
-        dashSec.classList.add('hidden');
-        renderStudentsTable();
-      }
+          <!-- 6. STATUS -->
+          <td class="py-3 px-4">
+            <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold ${
+              st.status === 'Paid' ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' :
+              st.status === 'Overdue' ? 'bg-rose-100 text-rose-700 border border-rose-200' : 'bg-amber-100 text-amber-700 border border-amber-200'
+            }">${st.status}</span>
+          </td>
+
+          <!-- 7. PAYMENT -->
+          <td class="py-3 px-4">
+            ${st.status === 'Paid' 
+              ? `<span class="text-emerald-600 font-semibold text-[11px] flex items-center gap-1"><i data-lucide="check-circle" class="w-3.5 h-3.5"></i> Cleared</span>`
+              : `<button type="button" onclick="markAsPaid('${st.id}')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[11px] font-semibold transition shadow-sm">Mark Paid</button>`
+            }
+          </td>
+
+          <!-- 8. ACTIONS -->
+          <td class="py-3 px-4 text-right space-x-1">
+            <button type="button" onclick="editStudent('${st.id}')" class="text-brand-600 hover:text-brand-800 font-semibold px-2 py-1 rounded transition">
+              Edit
+            </button>
+            <button type="button" onclick="deleteStudent('${st.id}')" class="text-rose-500 hover:text-rose-700 font-semibold px-2 py-1 rounded transition">
+              Delete
+            </button>
+          </td>
+
+        </tr>
+      `).join('');
+
       safeRenderIcons();
     }
 
+    // Dashboard Calculations
     function updateDashboardKPIs() {
-      let totalCollected = 0;
-      let pendingDues = 0;
-      let defaulters = 0;
-      const today = new Date().toISOString().split('T')[0];
+      const total = students.length;
+      const pendingSt = students.filter(s => s.status === 'Pending');
+      const paidSt = students.filter(s => s.status === 'Paid');
+      const overdueSt = students.filter(s => s.status === 'Overdue');
 
-      students.forEach(st => {
-        if (st.status === 'Paid') {
-          totalCollected += Number(st.monthlyFee);
-        } else {
-          pendingDues += Number(st.monthlyFee);
-          if (st.dueDate < today || st.status === 'Overdue') defaulters++;
-        }
-      });
+      const pendingSum = pendingSt.reduce((acc, s) => acc + (s.monthlyFee || 0), 0);
+      const paidSum = paidSt.reduce((acc, s) => acc + (s.monthlyFee || 0), 0);
+      const overdueSum = overdueSt.reduce((acc, s) => acc + (s.monthlyFee || 0), 0);
 
-      document.getElementById('statTotalStudents').textContent = students.length;
-      document.getElementById('statTotalCollected').textContent = '₹' + totalCollected.toLocaleString('en-IN');
-      document.getElementById('statPendingDues').textContent = '₹' + pendingDues.toLocaleString('en-IN');
-      document.getElementById('statDefaulters').textContent = defaulters;
-      renderChart(totalCollected, pendingDues);
+      document.getElementById('kpiTotalStudents').textContent = total;
+      document.getElementById('kpiPendingAmount').textContent = `₹${pendingSum}`;
+      document.getElementById('kpiPendingCount').textContent = `${pendingSt.length} Students Pending`;
+
+      document.getElementById('kpiCollectedAmount').textContent = `₹${paidSum}`;
+      document.getElementById('kpiPaidCount').textContent = `${paidSt.length} Cleared`;
+
+      document.getElementById('kpiOverdueAmount').textContent = `₹${overdueSum}`;
+      document.getElementById('kpiOverdueCount').textContent = `${overdueSt.length} Overdue`;
     }
 
-    function renderChart(collected, pending) {
-      const ctx = document.getElementById('feeChart');
-      if (!ctx || !window.Chart) return;
-      try {
-        if (chartInstance) chartInstance.destroy();
-        chartInstance = new Chart(ctx, {
-          type: 'bar',
-          data: {
-            labels: ['July', 'August', 'September', 'October (Due)'],
-            datasets: [
-              { label: 'Collected (₹)', data: [15000, 18000, collected, 12000], backgroundColor: '#4f46e5', borderRadius: 6 },
-              { label: 'Pending (₹)', data: [1000, 1500, pending, 8000], backgroundColor: '#fbbf24', borderRadius: 6 }
-            ]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { position: 'bottom' } }
-          }
-        });
-      } catch (err) {}
+    // ================= STUDENT PORTAL VIEW =================
+    function renderStudentPortal() {
+      const container = document.getElementById('studentPortalContent');
+      if (!container || !currentActiveStudent) return;
+
+      const st = currentActiveStudent;
+      const upiUrl = `upi://pay?pa=${encodeURIComponent(appSettings.upiId)}&pn=${encodeURIComponent(appSettings.merchantName)}&am=${st.monthlyFee}&cu=INR`;
+      const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(upiUrl)}`;
+
+      container.innerHTML = `
+        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-6">
+          <div class="flex justify-between items-start border-b border-slate-100 pb-4">
+            <div>
+              <h2 class="text-xl font-bold text-slate-900">${st.name}</h2>
+              <p class="text-xs text-slate-500 font-medium mt-0.5">${st.batch}</p>
+            </div>
+            <span class="px-3 py-1 rounded-full text-xs font-bold ${
+              st.status === 'Paid' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
+            }">${st.status}</span>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl text-xs">
+            <div>
+              <span class="text-slate-400 block">Monthly Fee</span>
+              <span class="text-base font-bold text-slate-900">₹${st.monthlyFee}</span>
+            </div>
+            <div>
+              <span class="text-slate-400 block">Due Date</span>
+              <span class="text-base font-bold text-slate-900">${st.dueDate}</span>
+            </div>
+          </div>
+
+          ${st.status !== 'Paid' ? `
+            <div class="text-center p-6 bg-brand-50/50 rounded-2xl border border-brand-100 space-y-4">
+              <h3 class="text-xs font-bold uppercase tracking-wider text-brand-700">Scan QR Code via PhonePe / Paytm / GooglePay</h3>
+              <img src="${qrCodeUrl}" alt="UPI QR Code" class="w-44 h-44 mx-auto rounded-xl border border-slate-200 bg-white p-2 shadow-sm" />
+              <div class="text-xs font-mono text-slate-600 bg-white py-1 px-3 rounded-lg border border-slate-200 inline-block">
+                UPI ID: <strong>${appSettings.upiId}</strong>
+              </div>
+            </div>
+          ` : `
+            <div class="text-center py-6 text-emerald-600 font-semibold text-xs flex items-center justify-center gap-2 bg-emerald-50 rounded-2xl border border-emerald-100">
+              <i data-lucide="check-circle" class="w-5 h-5"></i>
+              Fee Status is completely cleared for this month!
+            </div>
+          `}
+        </div>
+      `;
+
+      safeRenderIcons();
+    }
+
+    // ================= ADMIN SETTINGS & ACCOUNT CREATION =================
+    function saveSettings() {
+      const name = document.getElementById('settingMerchantName').value.trim();
+      const upi = document.getElementById('settingUpiId').value.trim();
+
+      if (!name || !upi) return;
+
+      appSettings.merchantName = name;
+      appSettings.upiId = upi;
+      persistData();
+
+      document.getElementById('navInstituteName').textContent = name;
+      document.getElementById('navVpaPreview').textContent = upi;
+
+      closeModal('settingsModal');
+      alert('Settings updated successfully!');
+    }
+
+    function createNewAdminAccount() {
+      const name = document.getElementById('newAdminName').value.trim();
+      const username = document.getElementById('newAdminUsername').value.trim();
+      const email = document.getElementById('newAdminEmail').value.trim();
+      const password = document.getElementById('newAdminPass').value.trim();
+
+      if (!name || !username || !password) {
+        alert('Please fill in Name, Username, and Password.');
+        return;
+      }
+
+      const newAdmin = {
+        id: 'ADM-' + Math.floor(100 + Math.random() * 900),
+        name: name,
+        username: username,
+        email: email || `${username}@csipbyabs.com`,
+        password: password
+      };
+
+      adminUsers.push(newAdmin);
+      persistData();
+
+      alert(`New Admin User "${username}" created! You can now log in using this ID and Password.`);
+
+      document.getElementById('newAdminName').value = '';
+      document.getElementById('newAdminUsername').value = '';
+      document.getElementById('newAdminEmail').value = '';
+      document.getElementById('newAdminPass').value = '';
     }
 
     function safeRenderIcons() {
-      if (window.lucide && typeof lucide.createIcons === 'function') {
-        try { lucide.createIcons(); } catch (e) {}
+      if (typeof lucide !== 'undefined' && lucide.createIcons) {
+        lucide.createIcons();
       }
     }
-    function openModal(id) {
-      const el = document.getElementById(id);
-      if (el) el.classList.remove('hidden');
-      safeRenderIcons();
-    }
-    function closeModal(id) {
-      const el = document.getElementById(id);
-      if (el) el.classList.add('hidden');
-    }
-    function showToast(msg, type = 'success') {
-      const c = document.getElementById('toastContainer');
-      if (!c) return;
-      const t = document.createElement('div');
-      t.className = `px-4 py-2.5 rounded-xl shadow-lg text-xs font-semibold text-white pointer-events-auto transition-all ${
-        type === 'error' ? 'bg-rose-600' : 'bg-emerald-600'
-      }`;
-      t.textContent = msg;
-      c.appendChild(t);
-      setTimeout(() => t.remove(), 3500);
-    }
-    function showLoginAlert(msg) {
-      const box = document.getElementById('loginAlertBox');
-      box.classList.remove('hidden');
-      box.className = 'mb-4 p-3 rounded-xl text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200';
-      box.textContent = msg;
-    }
 
-    window.addEventListener('DOMContentLoaded', () => {
-      safeRenderIcons();
-      document.getElementById('formDueDate').value = new Date().toISOString().split('T')[0];
-      checkSession();
+    // ================= GLOBAL BINDINGS & INIT =================
+    window.editStudent = editStudent;
+    window.deleteStudent = deleteStudent;
+    window.markAsPaid = markAsPaid;
+    window.openAddStudentModal = openAddStudentModal;
+    window.switchAdminSection = switchAdminSection;
+    window.openModal = openModal;
+    window.closeModal = closeModal;
 
+    document.addEventListener('DOMContentLoaded', () => {
+      // Setup Live Search & Filters
+      const searchInput = document.getElementById('searchInput');
+      const classFilter = document.getElementById('classFilter');
+      const statusFilter = document.getElementById('statusFilter');
+      
+      if (searchInput) searchInput.addEventListener('input', renderStudentsTable);
+      if (classFilter) classFilter.addEventListener('change', renderStudentsTable);
+      if (statusFilter) statusFilter.addEventListener('change', renderStudentsTable);
+      // Initialize Firebase Realtime Data Sync
+      listenToStudentsFromFirebase();
+      
+      safeRenderIcons();
     
-
     });
   </script>
 </body>
